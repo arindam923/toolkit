@@ -219,6 +219,63 @@ const flowSteps = [
   },
 ];
 
+const allTools = [
+  // Image Tools
+  { name: "Bulk Image Resizer", desc: "Resize multiple images by px, %, or preset (social, print)", category: "Images" },
+  { name: "Smart Compressor", desc: "Lossy/lossless compress with live quality preview", category: "Images" },
+  { name: "BG Remover (AI)", desc: "One-click background removal with edge refinement", category: "Images" },
+  { name: "Color Palette Extractor", desc: "Extract dominant colors as HEX / CSS variables", category: "Images" },
+  { name: "Watermark Tool", desc: "Add text/image watermarks with opacity & position control", category: "Images" },
+  { name: "Image Converter", desc: "Convert between JPG, PNG, WEBP, AVIF, and more formats", category: "Images" },
+  { name: "Image Cropper", desc: "Crop images with aspect ratio presets", category: "Images" },
+  { name: "Image Rotator", desc: "Rotate and flip images", category: "Images" },
+  { name: "Image Metadata Editor", desc: "View and edit EXIF, IPTC, and GPS data", category: "Images" },
+  { name: "Image Filter Editor", desc: "Apply filters and adjust brightness, contrast, saturation", category: "Images" },
+  { name: "Image Upscaler", desc: "AI-powered image upscaling", category: "Images" },
+  { name: "Image Effects", desc: "Add effects like blur, sharpen, and vignette", category: "Images" },
+  // PDF Tools
+  { name: "PDF Merger", desc: "Drag-drop PDFs to merge in custom order", category: "PDF" },
+  { name: "PDF Splitter", desc: "Extract pages, split by range or every N pages", category: "PDF" },
+  { name: "PDF OCR", desc: "Extract searchable text from scanned PDFs", category: "PDF" },
+  { name: "PDF Lock / Unlock", desc: "Password-protect or remove PDF passwords", category: "PDF" },
+  { name: "PDF ↔ Word / Excel", desc: "Accurate bidirectional conversions preserving layout", category: "PDF" },
+  { name: "PDF Compressor", desc: "Reduce PDF file size without losing quality", category: "PDF" },
+  { name: "PDF to Image", desc: "Convert PDF pages to images", category: "PDF" },
+  { name: "Image to PDF", desc: "Convert images to PDF", category: "PDF" },
+  { name: "PDF Redactor", desc: "Redact sensitive information from PDFs", category: "PDF" },
+  { name: "PDF Annotator", desc: "Add annotations to PDFs", category: "PDF" },
+  // File Converter
+  { name: "JPG→PNG", desc: "Convert JPG to PNG", category: "Files" },
+  { name: "HEIC→JPG", desc: "Convert HEIC to JPG", category: "Files" },
+  { name: "DOCX→PDF", desc: "Convert DOCX to PDF", category: "Files" },
+  { name: "MP4→GIF", desc: "Convert MP4 to GIF", category: "Files" },
+  { name: "PDF→DOCX", desc: "Convert PDF to DOCX", category: "Files" },
+  { name: "PNG→JPG", desc: "Convert PNG to JPG", category: "Files" },
+  { name: "WEBP→PNG", desc: "Convert WEBP to PNG", category: "Files" },
+  { name: "AVIF→JPG", desc: "Convert AVIF to JPG", category: "Files" },
+  // Video & GIF
+  { name: "Trimmer", desc: "Trim video", category: "Video" },
+  { name: "GIF Maker", desc: "Make GIFs from videos", category: "Video" },
+  { name: "Compressor", desc: "Compress video files", category: "Video" },
+  { name: "Thumbnail", desc: "Generate video thumbnails", category: "Video" },
+  { name: "Video to Audio", desc: "Extract audio from video", category: "Video" },
+  { name: "GIF to MP4", desc: "Convert GIF to MP4", category: "Video" },
+  // Security & Privacy
+  { name: "PDF Lock", desc: "Lock PDF files", category: "Security" },
+  { name: "Redact", desc: "Redact sensitive information", category: "Security" },
+  { name: "Password Gen", desc: "Generate strong passwords", category: "Security" },
+  { name: "Hash", desc: "Generate file hashes", category: "Security" },
+  { name: "Encrypt", desc: "Encrypt files", category: "Security" },
+  // Text & Data
+  { name: "JSON Format", desc: "Format JSON data", category: "Text" },
+  { name: "Word Count", desc: "Count words", category: "Text" },
+  { name: "CSV→JSON", desc: "Convert CSV to JSON", category: "Text" },
+  { name: "Text Diff", desc: "Compare text differences", category: "Text" },
+  { name: "Markdown→HTML", desc: "Convert Markdown to HTML", category: "Text" },
+  { name: "HTML→Markdown", desc: "Convert HTML to Markdown", category: "Text" },
+  { name: "Text Minifier", desc: "Minify text", category: "Text" },
+];
+
 const plans = [
   {
     name: "Free",
@@ -275,9 +332,8 @@ const badges: Record<
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("All Tools");
-  const [gridDots, setGridDots] = useState<
-    React.ReactNode[]
-  >([]);
+  const [gridDots, setGridDots] = useState<React.ReactNode[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const dots = [];
@@ -331,57 +387,65 @@ export default function Home() {
           </div>
           <div className="hidden md:flex gap-1.5">
             {tabs.map((tab) => (
-              <button
+              <a
                 key={tab}
-                type="button"
-                onClick={() => setActiveTab(tab)}
+                href={tab === "Images" ? "/images" : "#"}
                 className="px-3 py-1.5 rounded-[20px] text-xs border transition-all cursor-pointer font-['DM_Sans']"
                 style={{
-                  background:
-                    activeTab === tab
-                      ? "#FF5C35"
-                      : "transparent",
-                  color:
-                    activeTab === tab
-                      ? "#fff"
-                      : "var(--color-text-secondary)",
-                  borderColor:
-                    "var(--color-border-tertiary)",
+                  background: activeTab === tab ? "#FF5C35" : "transparent",
+                  color: activeTab === tab ? "#fff" : "var(--color-text-secondary)",
+                  borderColor: "var(--color-border-tertiary)",
+                  textDecoration: "none",
+                }}
+                onClick={(e) => {
+                  if (tab === "Images") {
+                    setActiveTab(tab);
+                  } else {
+                    e.preventDefault();
+                    setActiveTab(tab);
+                  }
                 }}
               >
                 {tab}
-              </button>
+              </a>
             ))}
           </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs"
-              style={{
-                background:
-                  "var(--color-background-secondary)",
-                border:
-                  "0.5px solid var(--color-border-tertiary)",
-                color: "var(--color-text-secondary)",
-              }}
-            >
-              <div
-                className="w-3 h-3 border-1.5 rounded-full relative"
-                style={{
-                  borderColor:
-                    "var(--color-text-secondary)",
-                }}
-              >
-                <div
-                  className="absolute bottom-[-3px] right-[-3px] w-1 h-0.5 rounded-sm rotate-45"
-                  style={{
-                    background:
-                      "var(--color-text-secondary)",
-                  }}
-                />
-              </div>
-              <span>Search tools...</span>
-            </div>
-          </div>
+           <div className="flex items-center gap-2">
+             <div className="relative">
+               <div
+                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs"
+                 style={{
+                   background: "var(--color-background-secondary)",
+                   border: "0.5px solid var(--color-border-tertiary)",
+                   color: "var(--color-text-secondary)",
+                 }}
+               >
+                 <div
+                   className="w-3 h-3 border-1.5 rounded-full relative"
+                   style={{
+                     borderColor: "var(--color-text-secondary)",
+                   }}
+                 >
+                   <div
+                     className="absolute bottom-[-3px] right-[-3px] w-1 h-0.5 rounded-sm rotate-45"
+                     style={{
+                       background: "var(--color-text-secondary)",
+                     }}
+                   />
+                 </div>
+                 <input
+                   type="text"
+                   placeholder="Search tools..."
+                   value={searchQuery}
+                   onChange={(e) => setSearchQuery(e.target.value)}
+                   className="bg-transparent border-none outline-none text-xs w-32 sm:w-40"
+                   style={{
+                     color: "var(--color-text-primary)",
+                   }}
+                 />
+               </div>
+             </div>
+           </div>
         </nav>
 
         {/* Hero */}
@@ -509,8 +573,106 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Search Results */}
+        {searchQuery && (
+          <section className="mb-3">
+            <div className="mb-3">
+              <h2
+                className="font-['Syne'] text-xs font-bold tracking-[2px] uppercase mb-0.5"
+                style={{
+                  color: "var(--color-text-secondary)",
+                }}
+              >
+                Search Results
+              </h2>
+              <p
+                className="text-sm font-medium"
+                style={{ color: "var(--color-text-primary)" }}
+              >
+                {allTools.filter(
+                  (tool) =>
+                    tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    tool.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    tool.category.toLowerCase().includes(searchQuery.toLowerCase())
+                ).length} tools found
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {allTools
+                .filter(
+                  (tool) =>
+                    tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    tool.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    tool.category.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((tool, i) => (
+                  <div
+                    key={i}
+                    className="relative p-5 rounded-[14px] cursor-pointer transition-all hover:-translate-y-0.5"
+                    style={{
+                      background: "var(--color-background-primary)",
+                      border: "0.5px solid var(--color-border-tertiary)",
+                    }}
+                  >
+                    <div
+                      className="absolute top-3.5 right-3.5 text-[10px] font-semibold font-['Syne']"
+                      style={{
+                        color: "var(--color-text-secondary)",
+                        opacity: 0.5,
+                      }}
+                    >
+                      {tool.category}
+                    </div>
+                    <div
+                      className="w-10 h-10 rounded-[10px] flex items-center justify-center text-xl mb-2.5"
+                      style={{ 
+                        background: tool.category === "Images" ? "rgba(255,92,53,0.1)" : 
+                                      tool.category === "PDF" ? "rgba(124,92,255,0.1)" :
+                                      tool.category === "Files" ? "rgba(0,200,150,0.1)" :
+                                      tool.category === "Video" ? "rgba(255,185,0,0.1)" :
+                                      tool.category === "Security" ? "rgba(52,152,219,0.1)" :
+                                      "rgba(255,92,53,0.08)"
+                      }}
+                    >
+                      {tool.category === "Images" ? "🖼️" : 
+                       tool.category === "PDF" ? "📄" :
+                       tool.category === "Files" ? "🔄" :
+                       tool.category === "Video" ? "✂️" :
+                       tool.category === "Security" ? "🔐" :
+                       "📝"}
+                    </div>
+                    <h3
+                      className="font-['Syne'] text-sm font-bold mb-1.5"
+                      style={{
+                        color: "var(--color-text-primary)",
+                      }}
+                    >
+                      {tool.name}
+                    </h3>
+                    <p
+                      className="text-[11.5px] leading-relaxed mb-2.5"
+                      style={{
+                        color: "var(--color-text-secondary)",
+                      }}
+                    >
+                      {tool.desc}
+                    </p>
+                    <div
+                      className="absolute bottom-3.5 right-3.5 text-[14px] opacity-0 translate-x-[-4px] transition-all"
+                      style={{ color: "#FF5C35" }}
+                    >
+                      →
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </section>
+        )}
+
         {/* Categories */}
-        <section className="mb-3">
+        {!searchQuery && (
+          <section className="mb-3">
           <div className="mb-3">
             <h2
               className="font-['Syne'] text-xs font-bold tracking-[2px] uppercase mb-0.5"
@@ -528,16 +690,21 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
             {categories.map((cat, idx) => (
-              <div
+              <a
                 key={`cat-${idx}`}
-                className="relative p-5 rounded-[14px] cursor-pointer transition-all hover:-translate-y-0.5"
+                href={cat.name === "Image Tools" ? "/images" : "#"}
+                className="relative p-5 rounded-[14px] cursor-pointer transition-all hover:-translate-y-0.5 block"
                 style={{
-                  background:
-                    "var(--color-background-primary)",
-                  border:
-                    "0.5px solid var(--color-border-tertiary)",
+                  background: "var(--color-background-primary)",
+                  border: "0.5px solid var(--color-border-tertiary)",
+                  textDecoration: "none",
+                }}
+                onClick={(e) => {
+                  if (cat.name !== "Image Tools") {
+                    e.preventDefault();
+                  }
                 }}
               >
                 <div
@@ -595,12 +762,14 @@ export default function Home() {
                 >
                   →
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </section>
+        )}
 
         {/* Tools Spotlight */}
+        {!searchQuery && (
         <section className="mb-3">
           <div className="mb-3">
             <h2
@@ -747,8 +916,10 @@ export default function Home() {
             </div>
           </div>
         </section>
+        )}
 
         {/* User Flow */}
+        {!searchQuery && (
         <section className="mb-3">
           <div className="mb-3">
             <h2
@@ -811,8 +982,10 @@ export default function Home() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Key Features */}
+        {!searchQuery && (
         <section className="mb-3">
           <div className="mb-3">
             <h2
@@ -863,8 +1036,10 @@ export default function Home() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Pricing */}
+        {!searchQuery && (
         <section className="mb-3">
           <div className="mb-3">
             <h2
@@ -969,6 +1144,7 @@ export default function Home() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Footer */}
         <footer

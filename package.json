@@ -9,9 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
+    "@upscalerjs/esrgan-slim": "^1.0.0-beta.12",
+    "@upscalerjs/esrgan-thick": "^1.0.0-beta.16",
+    "browser-image-compression": "^2.0.2",
+    "color-thief": "^2.2.5",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "upscaler": "^1.0.0-beta.19"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
