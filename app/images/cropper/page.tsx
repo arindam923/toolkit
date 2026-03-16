@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import BaseTool, { ImageFile } from "../components/BaseTool";
 
 interface CropSettings {
@@ -15,6 +15,7 @@ export default function ImageCropper() {
   });
 
   const [selectedFile, setSelectedFile] = useState<ImageFile | null>(null);
+  const [files, setFiles] = useState<ImageFile[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -25,6 +26,16 @@ export default function ImageCropper() {
     width: 200,
     height: 200,
   });
+
+  // Sync selectedFile whenever files change (via BaseTool's onFilesChange)
+  useEffect(() => {
+    if (files.length > 0 && (!selectedFile || !files.find(f => f.id === selectedFile.id))) {
+      handleImageLoad(files[0]);
+    } else if (files.length === 0 && selectedFile) {
+      setSelectedFile(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files]);
 
   // Load image for cropping
   const handleImageLoad = (imageFile: ImageFile) => {
@@ -185,16 +196,9 @@ export default function ImageCropper() {
       description="Crop images with freehand or preset aspect ratio. Drag the crop box to select area."
       icon="✂️"
       onProcess={handleCrop}
+      onFilesChange={setFiles}
     >
-      {({ files }) => {
-        // Update selected file when files change
-        if (files.length > 0 && (!selectedFile || !files.find(f => f.id === selectedFile.id))) {
-          handleImageLoad(files[0]);
-        } else if (files.length === 0 && selectedFile) {
-          setSelectedFile(null);
-        }
-
-        return (
+      {() => (
           <div className="space-y-4">
         {/* Image Preview with Crop */}
         {selectedFile && (
@@ -299,8 +303,7 @@ export default function ImageCropper() {
           </p>
         </div>
           </div>
-        );
-      }}
+      )}
     </BaseTool>
   );
 }

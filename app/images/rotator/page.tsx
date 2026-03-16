@@ -19,7 +19,18 @@ export default function ImageRotator() {
   });
 
   const [selectedFile, setSelectedFile] = useState<ImageFile | null>(null);
+  const [files, setFiles] = useState<ImageFile[]>([]);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Sync selectedFile whenever the files change (via BaseTool's onFilesChange)
+  useEffect(() => {
+    if (files.length > 0 && (!selectedFile || !files.find(f => f.id === selectedFile.id))) {
+      setSelectedFile(files[0]);
+    } else if (files.length === 0 && selectedFile) {
+      setSelectedFile(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files]);
 
   // Rotate and flip image
   const handleRotate = async (imageFile: ImageFile): Promise<string> => {
@@ -118,16 +129,9 @@ export default function ImageRotator() {
       description="Rotate and flip images by 90 degrees, 180 degrees, or custom angles. Supports horizontal and vertical flips. See real-time preview before downloading."
       icon="🔄"
       onProcess={handleRotate}
+      onFilesChange={setFiles}
     >
-      {({ files }) => {
-        // Update selected file when files change
-        if (files.length > 0 && (!selectedFile || !files.find(f => f.id === selectedFile.id))) {
-          setSelectedFile(files[0]);
-        } else if (files.length === 0 && selectedFile) {
-          setSelectedFile(null);
-        }
-
-        return (
+      {() => (
           <div className="space-y-4">
             {/* Real-time Preview */}
             {selectedFile && (
@@ -259,8 +263,7 @@ export default function ImageRotator() {
               </p>
             </div>
           </div>
-        );
-      }}
+      )}
     </BaseTool>
   );
 }

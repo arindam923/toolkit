@@ -23,7 +23,18 @@ export default function FilterEditor() {
   });
 
   const [selectedFile, setSelectedFile] = useState<ImageFile | null>(null);
+  const [files, setFiles] = useState<ImageFile[]>([]);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Sync selectedFile whenever the files change (via BaseTool's onFilesChange)
+  useEffect(() => {
+    if (files.length > 0 && (!selectedFile || !files.find(f => f.id === selectedFile.id))) {
+      setSelectedFile(files[0]);
+    } else if (files.length === 0 && selectedFile) {
+      setSelectedFile(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files]);
 
   // Handle file upload for preview
   useEffect(() => {
@@ -205,16 +216,9 @@ export default function FilterEditor() {
       description="Apply advanced filters with precise control over brightness, contrast, saturation, blur, and grayscale. See real-time preview before downloading."
       icon="🎨"
       onProcess={handleFilter}
+      onFilesChange={setFiles}
     >
-      {({ files }) => {
-        // Update selected file when files change
-        if (files.length > 0 && (!selectedFile || !files.find(f => f.id === selectedFile.id))) {
-          setSelectedFile(files[0]);
-        } else if (files.length === 0 && selectedFile) {
-          setSelectedFile(null);
-        }
-
-        return (
+      {() => (
           <div className="space-y-4">
         {/* Real-time Preview */}
         {selectedFile && (
@@ -415,9 +419,8 @@ export default function FilterEditor() {
             <strong>Tip:</strong> Combine filters for creative effects. Start with a preset and adjust to taste. See real-time changes in the preview above.
           </p>
         </div>
-          </div>
-        );
-      }}
+        </div>
+      )}
     </BaseTool>
   );
 }
