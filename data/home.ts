@@ -90,12 +90,12 @@ export const categories: Category[] = [
   },
   {
     name: "Security & Privacy",
-    count: 5,
+    count: 6,
     icon: "🔐",
     iconBg: "rgba(52,152,219,0.1)",
     description:
       "Encrypt files, redact sensitive info, generate strong passwords & hashes.",
-    tools: ["PDF Lock", "Redact", "Password Gen", "Hash", "+1"],
+    tools: ["Password Gen", "Hash Gen", "File Encrypt", "Text Encrypt", "+2"],
   },
   {
     name: "Text & Data",
@@ -272,11 +272,12 @@ export const allTools: Tool[] = [
   { name: "Video to Audio", desc: "Extract audio from video", category: "Video" },
   { name: "GIF to MP4", desc: "Convert GIF to MP4", category: "Video" },
   // Security & Privacy
-  { name: "PDF Lock", desc: "Lock PDF files", category: "Security" },
-  { name: "Redact", desc: "Redact sensitive information", category: "Security" },
-  { name: "Password Gen", desc: "Generate strong passwords", category: "Security" },
-  { name: "Hash", desc: "Generate file hashes", category: "Security" },
-  { name: "Encrypt", desc: "Encrypt files", category: "Security" },
+  { name: "Password Generator", desc: "Generate strong, random passwords", category: "Security" },
+  { name: "Hash Generator", desc: "Generate SHA and MD5 hashes", category: "Security" },
+  { name: "File Encrypt/Decrypt", desc: "Encrypt and decrypt files with AES-256", category: "Security" },
+  { name: "Text Encrypt/Decrypt", desc: "Encrypt and decrypt text securely", category: "Security" },
+  { name: "Security Scanner", desc: "Analyze files for security risks", category: "Security" },
+  { name: "Random Generator", desc: "Generate random strings, numbers, UUIDs", category: "Security" },
   // Text & Data
   { name: "JSON Format", desc: "Format JSON data", category: "Text" },
   { name: "Word Count", desc: "Count words", category: "Text" },
@@ -338,7 +339,7 @@ export const badges: Record<BadgeKey, { bg: string; color: string }> = {
   New: { bg: "rgba(255,92,53,0.12)", color: "#FF5C35" },
 };
 
-export const NAV_TABS = ["All Tools", "Images", "PDF", "Files", "Video"] as const;
+export const NAV_TABS = ["All Tools", "Images", "PDF", "Files", "Security", "Video"] as const;
 
 export const HERO_STATS = [
   { num: "48+", label: "Tools available" },

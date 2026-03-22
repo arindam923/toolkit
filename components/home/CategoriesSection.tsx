@@ -14,7 +14,7 @@ export default function CategoriesSection() {
           className="text-sm font-medium"
           style={{ color: "var(--color-text-primary)" }}
         >
-          8 tool categories, 48+ individual tools
+          6 tool categories, 55+ individual tools
         </p>
       </div>
 
@@ -22,7 +22,7 @@ export default function CategoriesSection() {
         {categories.map((cat, idx) => (
           <a
             key={`cat-${idx}`}
-            href={cat.name === "Image Tools" ? "/images" : "#"}
+            href={cat.name === "Image Tools" ? "/images" : cat.name === "PDF Toolkit" ? "/pdf" : cat.name === "File Converter" ? "/files" : cat.name === "Security & Privacy" ? "/security" : "#"}
             className="relative p-5 rounded-[14px] cursor-pointer transition-all hover:-translate-y-0.5 block"
             style={{
               background: "var(--color-background-primary)",
@@ -30,7 +30,7 @@ export default function CategoriesSection() {
               textDecoration: "none",
             }}
             onClick={(e) => {
-              if (cat.name !== "Image Tools") e.preventDefault();
+              if (cat.name !== "Image Tools" && cat.name !== "PDF Toolkit" && cat.name !== "File Converter" && cat.name !== "Security & Privacy") e.preventDefault();
             }}
           >
             {/* Count badge */}

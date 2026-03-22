@@ -1,21 +1,6 @@
-"use client";
-
-import { NAV_TABS } from "@/data/home";
 import Link from "next/link";
 
-interface NavbarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-  searchQuery: string;
-  onSearchChange: (q: string) => void;
-}
-
-export default function Navbar({
-  activeTab,
-  onTabChange,
-  searchQuery,
-  onSearchChange,
-}: NavbarProps) {
+export default function SecurityNavbar() {
   return (
     <nav
       className="flex items-center justify-between mb-2.5 px-4 sm:px-6 py-3.5 rounded-[14px] border"
@@ -34,30 +19,6 @@ export default function Navbar({
           <span style={{ color: "var(--color-text-primary)" }}>Kit</span>
         </div>
       </Link>
-
-      {/* Tabs */}
-      <div className="hidden md:flex gap-1.5">
-        {NAV_TABS.map((tab) => (
-          <a
-            key={tab}
-            href={tab === "Images" ? "/images" : tab === "PDF" ? "/pdf" : "#"}
-            className="px-3 py-1.5 rounded-[20px] text-xs border transition-all cursor-pointer font-['DM_Sans']"
-            style={{
-              background: activeTab === tab ? "#FF5C35" : "transparent",
-              color:
-                activeTab === tab ? "#fff" : "var(--color-text-secondary)",
-              borderColor: "var(--color-border-tertiary)",
-              textDecoration: "none",
-            }}
-            onClick={(e) => {
-              if (tab !== "Images" && tab !== "PDF") e.preventDefault();
-              onTabChange(tab);
-            }}
-          >
-            {tab}
-          </a>
-        ))}
-      </div>
 
       {/* Search */}
       <div className="flex items-center gap-2">
@@ -82,8 +43,6 @@ export default function Navbar({
             <input
               type="text"
               placeholder="Search tools..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
               className="bg-transparent border-none outline-none text-xs w-32 sm:w-40"
               style={{ color: "var(--color-text-primary)" }}
             />
