@@ -59,7 +59,14 @@ export const categories: Category[] = [
     iconBg: "rgba(255,92,53,0.1)",
     description:
       "Resize, compress, convert, crop, rotate, flip, watermark & enhance images.",
-    tools: ["Resizer", "Compressor", "Converter", "Cropper", "BG Remover", "+7"],
+    tools: [
+      "Resizer",
+      "Compressor",
+      "Converter",
+      "Cropper",
+      "BG Remover",
+      "+7",
+    ],
   },
   {
     name: "PDF Toolkit",
@@ -68,7 +75,14 @@ export const categories: Category[] = [
     iconBg: "rgba(124,92,255,0.1)",
     description:
       "Merge, split, compress, convert, lock, unlock, OCR & annotate PDFs.",
-    tools: ["Merge", "Split", "Compress", "Word↔PDF", "OCR", "+5"],
+    tools: [
+      "Merge",
+      "Split",
+      "Compress",
+      "Word↔PDF",
+      "OCR",
+      "+5",
+    ],
   },
   {
     name: "File Converter",
@@ -77,7 +91,13 @@ export const categories: Category[] = [
     iconBg: "rgba(0,200,150,0.1)",
     description:
       "Change file formats instantly — images, docs, video, audio & archives.",
-    tools: ["JPG→PNG", "HEIC→JPG", "DOCX→PDF", "MP4→GIF", "+4"],
+    tools: [
+      "JPG→PNG",
+      "HEIC→JPG",
+      "DOCX→PDF",
+      "MP4→GIF",
+      "+4",
+    ],
   },
   {
     name: "Video & GIF",
@@ -86,7 +106,13 @@ export const categories: Category[] = [
     iconBg: "rgba(255,185,0,0.1)",
     description:
       "Trim video, extract frames, make GIFs, generate thumbnails & compress.",
-    tools: ["Trimmer", "GIF Maker", "Compressor", "Thumbnail", "+2"],
+    tools: [
+      "Trimmer",
+      "GIF Maker",
+      "Compressor",
+      "Thumbnail",
+      "+2",
+    ],
   },
   {
     name: "Security & Privacy",
@@ -95,7 +121,13 @@ export const categories: Category[] = [
     iconBg: "rgba(52,152,219,0.1)",
     description:
       "Encrypt files, redact sensitive info, generate strong passwords & hashes.",
-    tools: ["Password Gen", "Hash Gen", "File Encrypt", "Text Encrypt", "+2"],
+    tools: [
+      "Password Gen",
+      "Hash Gen",
+      "File Encrypt",
+      "Text Encrypt",
+      "+2",
+    ],
   },
   {
     name: "Text & Data",
@@ -104,7 +136,13 @@ export const categories: Category[] = [
     iconBg: "rgba(255,92,53,0.08)",
     description:
       "Format JSON, minify code, count words, diff text, CSV viewer & converter.",
-    tools: ["JSON Format", "Word Count", "CSV→JSON", "Text Diff", "+3"],
+    tools: [
+      "JSON Format",
+      "Word Count",
+      "CSV→JSON",
+      "Text Diff",
+      "+3",
+    ],
   },
 ];
 
@@ -138,6 +176,12 @@ export const imageTools: SpotlightTool[] = [
     name: "Watermark Tool",
     desc: "Add text/image watermarks with opacity & position control",
     badge: "Pro",
+  },
+  {
+    icon: "🧬",
+    name: "Design System Generator",
+    desc: "Extract color palette, typography, and design notes from UI screenshots",
+    badge: "New",
   },
 ];
 
@@ -232,60 +276,276 @@ export const flowSteps: FlowStep[] = [
 
 export const allTools: Tool[] = [
   // Image Tools
-  { name: "Bulk Image Resizer", desc: "Resize multiple images by px, %, or preset (social, print)", category: "Images" },
-  { name: "Smart Compressor", desc: "Lossy/lossless compress with live quality preview", category: "Images" },
-  { name: "BG Remover (AI)", desc: "One-click background removal with edge refinement", category: "Images" },
-  { name: "Color Palette Extractor", desc: "Extract dominant colors as HEX / CSS variables", category: "Images" },
-  { name: "Watermark Tool", desc: "Add text/image watermarks with opacity & position control", category: "Images" },
-  { name: "Image Converter", desc: "Convert between JPG, PNG, WEBP, AVIF, and more formats", category: "Images" },
-  { name: "Image Cropper", desc: "Crop images with aspect ratio presets", category: "Images" },
-  { name: "Image Rotator", desc: "Rotate and flip images", category: "Images" },
-  { name: "Image Metadata Editor", desc: "View and edit EXIF, IPTC, and GPS data", category: "Images" },
-  { name: "Image Filter Editor", desc: "Apply filters and adjust brightness, contrast, saturation", category: "Images" },
-  { name: "Image Upscaler", desc: "AI-powered image upscaling", category: "Images" },
-  { name: "Image Effects", desc: "Add effects like blur, sharpen, and vignette", category: "Images" },
+  {
+    name: "Bulk Image Resizer",
+    desc: "Resize multiple images by px, %, or preset (social, print)",
+    category: "Images",
+  },
+  {
+    name: "Smart Compressor",
+    desc: "Lossy/lossless compress with live quality preview",
+    category: "Images",
+  },
+  {
+    name: "BG Remover (AI)",
+    desc: "One-click background removal with edge refinement",
+    category: "Images",
+  },
+  {
+    name: "Color Palette Extractor",
+    desc: "Extract dominant colors as HEX / CSS variables",
+    category: "Images",
+  },
+  {
+    name: "Watermark Tool",
+    desc: "Add text/image watermarks with opacity & position control",
+    category: "Images",
+  },
+  {
+    name: "Design System Generator",
+    desc: "Extract color palette, typography, and design notes from UI screenshots",
+    category: "Images",
+  },
+  {
+    name: "Image Converter",
+    desc: "Convert between JPG, PNG, WEBP, AVIF, and more formats",
+    category: "Images",
+  },
+  {
+    name: "Image Cropper",
+    desc: "Crop images with aspect ratio presets",
+    category: "Images",
+  },
+  {
+    name: "Image Rotator",
+    desc: "Rotate and flip images",
+    category: "Images",
+  },
+  {
+    name: "Image Metadata Editor",
+    desc: "View and edit EXIF, IPTC, and GPS data",
+    category: "Images",
+  },
+  {
+    name: "Image Filter Editor",
+    desc: "Apply filters and adjust brightness, contrast, saturation",
+    category: "Images",
+  },
+  {
+    name: "Image Upscaler",
+    desc: "AI-powered image upscaling",
+    category: "Images",
+  },
+  {
+    name: "Image Effects",
+    desc: "Add effects like blur, sharpen, and vignette",
+    category: "Images",
+  },
   // PDF Tools
-  { name: "PDF Merger", desc: "Drag-drop PDFs to merge in custom order", category: "PDF" },
-  { name: "PDF Splitter", desc: "Extract pages, split by range or every N pages", category: "PDF" },
-  { name: "PDF OCR", desc: "Extract searchable text from scanned PDFs", category: "PDF" },
-  { name: "PDF Lock / Unlock", desc: "Password-protect or remove PDF passwords", category: "PDF" },
-  { name: "PDF ↔ Word / Excel", desc: "Accurate bidirectional conversions preserving layout", category: "PDF" },
-  { name: "PDF Compressor", desc: "Reduce PDF file size without losing quality", category: "PDF" },
-  { name: "PDF to Image", desc: "Convert PDF pages to images", category: "PDF" },
-  { name: "Image to PDF", desc: "Convert images to PDF", category: "PDF" },
-  { name: "PDF Redactor", desc: "Redact sensitive information from PDFs", category: "PDF" },
-  { name: "PDF Annotator", desc: "Add annotations to PDFs", category: "PDF" },
+  {
+    name: "PDF Merger",
+    desc: "Drag-drop PDFs to merge in custom order",
+    category: "PDF",
+  },
+  {
+    name: "PDF Splitter",
+    desc: "Extract pages, split by range or every N pages",
+    category: "PDF",
+  },
+  {
+    name: "PDF OCR",
+    desc: "Extract searchable text from scanned PDFs",
+    category: "PDF",
+  },
+  {
+    name: "PDF Lock / Unlock",
+    desc: "Password-protect or remove PDF passwords",
+    category: "PDF",
+  },
+  {
+    name: "PDF ↔ Word / Excel",
+    desc: "Accurate bidirectional conversions preserving layout",
+    category: "PDF",
+  },
+  {
+    name: "PDF Compressor",
+    desc: "Reduce PDF file size without losing quality",
+    category: "PDF",
+  },
+  {
+    name: "PDF to Image",
+    desc: "Convert PDF pages to images",
+    category: "PDF",
+  },
+  {
+    name: "Image to PDF",
+    desc: "Convert images to PDF",
+    category: "PDF",
+  },
+  {
+    name: "PDF Redactor",
+    desc: "Redact sensitive information from PDFs",
+    category: "PDF",
+  },
+  {
+    name: "PDF Annotator",
+    desc: "Add annotations to PDFs",
+    category: "PDF",
+  },
   // File Converter
-  { name: "JPG→PNG", desc: "Convert JPG to PNG", category: "Files" },
-  { name: "HEIC→JPG", desc: "Convert HEIC to JPG", category: "Files" },
-  { name: "DOCX→PDF", desc: "Convert DOCX to PDF", category: "Files" },
-  { name: "MP4→GIF", desc: "Convert MP4 to GIF", category: "Files" },
-  { name: "PDF→DOCX", desc: "Convert PDF to DOCX", category: "Files" },
-  { name: "PNG→JPG", desc: "Convert PNG to JPG", category: "Files" },
-  { name: "WEBP→PNG", desc: "Convert WEBP to PNG", category: "Files" },
-  { name: "AVIF→JPG", desc: "Convert AVIF to JPG", category: "Files" },
+  {
+    name: "JPG to PNG Converter",
+    desc: "Convert JPG to PNG",
+    category: "Files",
+  },
+  {
+    name: "PNG to JPG Converter",
+    desc: "Convert PNG to JPG",
+    category: "Files",
+  },
+  {
+    name: "PNG to WEBP Converter",
+    desc: "Convert PNG to WEBP",
+    category: "Files",
+  },
+  {
+    name: "WEBP to PNG Converter",
+    desc: "Convert WEBP to PNG",
+    category: "Files",
+  },
+  {
+    name: "HEIC to JPG Converter",
+    desc: "Convert HEIC to JPG",
+    category: "Files",
+  },
+  {
+    name: "AVIF to JPG Converter",
+    desc: "Convert AVIF to JPG",
+    category: "Files",
+  },
+  {
+    name: "JPG to WEBP Converter",
+    desc: "Convert JPG to WEBP",
+    category: "Files",
+  },
+  {
+    name: "WEBP to JPG Converter",
+    desc: "Convert WEBP to JPG",
+    category: "Files",
+  },
+  {
+    name: "DOCX to PDF Converter",
+    desc: "Convert DOCX to PDF",
+    category: "Files",
+  },
+  {
+    name: "MP4 to GIF Converter",
+    desc: "Convert MP4 to GIF",
+    category: "Files",
+  },
+  {
+    name: "PDF to DOCX Converter",
+    desc: "Convert PDF to DOCX",
+    category: "Files",
+  },
   // Video & GIF
-  { name: "Trimmer", desc: "Trim video", category: "Video" },
-  { name: "GIF Maker", desc: "Make GIFs from videos", category: "Video" },
-  { name: "Compressor", desc: "Compress video files", category: "Video" },
-  { name: "Thumbnail", desc: "Generate video thumbnails", category: "Video" },
-  { name: "Video to Audio", desc: "Extract audio from video", category: "Video" },
-  { name: "GIF to MP4", desc: "Convert GIF to MP4", category: "Video" },
+  {
+    name: "Trimmer",
+    desc: "Trim video",
+    category: "Video",
+  },
+  {
+    name: "GIF Maker",
+    desc: "Make GIFs from videos",
+    category: "Video",
+  },
+  {
+    name: "Compressor",
+    desc: "Compress video files",
+    category: "Video",
+  },
+  {
+    name: "Thumbnail",
+    desc: "Generate video thumbnails",
+    category: "Video",
+  },
+  {
+    name: "Video to Audio",
+    desc: "Extract audio from video",
+    category: "Video",
+  },
+  {
+    name: "GIF to MP4",
+    desc: "Convert GIF to MP4",
+    category: "Video",
+  },
   // Security & Privacy
-  { name: "Password Generator", desc: "Generate strong, random passwords", category: "Security" },
-  { name: "Hash Generator", desc: "Generate SHA and MD5 hashes", category: "Security" },
-  { name: "File Encrypt/Decrypt", desc: "Encrypt and decrypt files with AES-256", category: "Security" },
-  { name: "Text Encrypt/Decrypt", desc: "Encrypt and decrypt text securely", category: "Security" },
-  { name: "Security Scanner", desc: "Analyze files for security risks", category: "Security" },
-  { name: "Random Generator", desc: "Generate random strings, numbers, UUIDs", category: "Security" },
+  {
+    name: "Password Generator",
+    desc: "Generate strong, random passwords",
+    category: "Security",
+  },
+  {
+    name: "Hash Generator",
+    desc: "Generate SHA and MD5 hashes",
+    category: "Security",
+  },
+  {
+    name: "File Encrypt/Decrypt",
+    desc: "Encrypt and decrypt files with AES-256",
+    category: "Security",
+  },
+  {
+    name: "Text Encrypt/Decrypt",
+    desc: "Encrypt and decrypt text securely",
+    category: "Security",
+  },
+  {
+    name: "Security Scanner",
+    desc: "Analyze files for security risks",
+    category: "Security",
+  },
+  {
+    name: "Random Generator",
+    desc: "Generate random strings, numbers, UUIDs",
+    category: "Security",
+  },
   // Text & Data
-  { name: "JSON Format", desc: "Format JSON data", category: "Text" },
-  { name: "Word Count", desc: "Count words", category: "Text" },
-  { name: "CSV→JSON", desc: "Convert CSV to JSON", category: "Text" },
-  { name: "Text Diff", desc: "Compare text differences", category: "Text" },
-  { name: "Markdown→HTML", desc: "Convert Markdown to HTML", category: "Text" },
-  { name: "HTML→Markdown", desc: "Convert HTML to Markdown", category: "Text" },
-  { name: "Text Minifier", desc: "Minify text", category: "Text" },
+  {
+    name: "JSON Format",
+    desc: "Format JSON data",
+    category: "Text",
+  },
+  {
+    name: "Word Count",
+    desc: "Count words",
+    category: "Text",
+  },
+  {
+    name: "CSV→JSON",
+    desc: "Convert CSV to JSON",
+    category: "Text",
+  },
+  {
+    name: "Text Diff",
+    desc: "Compare text differences",
+    category: "Text",
+  },
+  {
+    name: "Markdown→HTML",
+    desc: "Convert Markdown to HTML",
+    category: "Text",
+  },
+  {
+    name: "HTML→Markdown",
+    desc: "Convert HTML to Markdown",
+    category: "Text",
+  },
+  {
+    name: "Text Minifier",
+    desc: "Minify text",
+    category: "Text",
+  },
 ];
 
 export const plans: Plan[] = [
@@ -333,13 +593,23 @@ export const plans: Plan[] = [
   },
 ];
 
-export const badges: Record<BadgeKey, { bg: string; color: string }> = {
+export const badges: Record<
+  BadgeKey,
+  { bg: string; color: string }
+> = {
   Free: { bg: "rgba(0,200,150,0.12)", color: "#00A87A" },
   Pro: { bg: "rgba(124,92,255,0.12)", color: "#7C5CFF" },
   New: { bg: "rgba(255,92,53,0.12)", color: "#FF5C35" },
 };
 
-export const NAV_TABS = ["All Tools", "Images", "PDF", "Files", "Security", "Video"] as const;
+export const NAV_TABS = [
+  "All Tools",
+  "Images",
+  "PDF",
+  "Files",
+  "Security",
+  "Video",
+] as const;
 
 export const HERO_STATS = [
   { num: "48+", label: "Tools available" },

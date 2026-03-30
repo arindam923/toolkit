@@ -2,71 +2,45 @@ import { SECURITY_PAGE_STATS } from "@/data/security";
 
 export default function SecurityPageHeader() {
   return (
-    <section
-      className="relative overflow-hidden px-6 sm:px-10 py-8 sm:py-11 rounded-[14px] mb-2.5"
-      style={{
-        background: "var(--color-background-primary)",
-        border: "0.5px solid var(--color-border-tertiary)",
-      }}
-    >
-      {/* Gradient overlay */}
-      <div
-        className="absolute top-0 right-0 w-[200px] sm:w-[300px] h-full pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(135deg, transparent 40%, rgba(52,152,219,0.06) 100%)",
-        }}
-      />
+    <section className="relative overflow-hidden px-8 py-16 rounded-[24px] mb-8 border border-border bg-muted/10">
+      {/* Grid Background */}
+      <div className="absolute inset-0 bg-grid opacity-50" />
+      
+      {/* Brand Accent Glow */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-accent/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
 
-      <div className="relative">
+      <div className="relative z-10">
         {/* Badge */}
-        <div
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[20px] text-[11px] font-medium mb-4"
-          style={{
-            background: "rgba(52,152,219,0.1)",
-            color: "#3498DB",
-            letterSpacing: "0.3px",
-          }}
-        >
-          <div className="w-1.5 h-1.5 rounded-full bg-[#3498DB] animate-pulse" />
-          Security & Privacy Tools
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-accent/10 border border-brand-accent/20 rounded-full mb-8">
+          <div className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
+          <span className="mono-label text-brand-accent text-[9px] font-bold">
+            Security & Privacy Infrastructure
+          </span>
         </div>
 
         {/* Headline */}
-        <h1
-          className="font-['Syne'] font-extrabold text-[26px] sm:text-[36px] leading-tight tracking-[-1px] mb-3"
-          style={{ color: "var(--color-text-primary)" }}
-        >
-          Security & Privacy
+        <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.85] uppercase mb-8">
+          ENCRYPT.
           <br />
-          <em style={{ color: "#3498DB", fontStyle: "normal" }}>Tools.</em>
+          <span className="text-muted-foreground/30">PROTECT.</span>
+          <br />
+          <span className="text-brand-accent">ANONYMIZE.</span>
         </h1>
 
         {/* Subheading */}
-        <p
-          className="text-sm leading-relaxed max-w-[440px] mb-6"
-          style={{ color: "var(--color-text-secondary)" }}
-        >
-          Encrypt files, redact sensitive info, generate strong passwords & hashes. Protect your data with our security toolkit.
+        <p className="text-muted-foreground max-w-lg text-sm uppercase tracking-widest leading-relaxed mb-12">
+          High-precision cryptographic utilities for the modern web. 
+          Everything stays in your browser. No data ever leaves your system.
         </p>
 
         {/* Stats */}
-        <div
-          className="flex gap-7 mt-7 pt-6"
-          style={{ borderTop: "0.5px solid var(--color-border-tertiary)" }}
-        >
+        <div className="flex flex-wrap gap-12 pt-8 border-t border-border/50">
           {SECURITY_PAGE_STATS.map((stat, idx) => (
-            <div key={idx}>
-              <div
-                className="font-['Syne'] text-xl font-bold"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+            <div key={idx} className="space-y-1">
+              <div className="text-3xl font-display font-bold tracking-tighter text-foreground">
                 {stat.num}
               </div>
-              <div
-                className="text-[11px] mt-0.5"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
+              <div className="mono-label text-muted-foreground text-[9px]">
                 {stat.label}
               </div>
             </div>

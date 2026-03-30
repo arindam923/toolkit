@@ -1,4 +1,6 @@
 import { badges, BadgeKey, SecurityTool } from "@/data/security";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
 interface SecurityToolsGridProps {
   tools: SecurityTool[];
@@ -6,72 +8,60 @@ interface SecurityToolsGridProps {
 
 export default function SecurityToolsGrid({ tools }: SecurityToolsGridProps) {
   return (
-    <section className="mb-3">
-      <div className="mb-3">
-        <h2
-          className="font-['Syne'] text-xs font-bold tracking-[2px] uppercase mb-0.5"
-          style={{ color: "var(--color-text-secondary)" }}
-        >
-          Security Tools
+    <section className="space-y-6">
+      <div className="flex items-center justify-between border-b border-border pb-4">
+        <h2 className="mono-label text-foreground font-bold italic tracking-tight text-sm">
+          SECURITY_MODULE_REGISTRY
         </h2>
-        <p
-          className="text-sm font-medium"
-          style={{ color: "var(--color-text-primary)" }}
-        >
-          {tools.length} tools available
-        </p>
+        <div className="mono-label text-muted-foreground text-[9px]">
+          {tools.length} MODULES_ONLINE
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-        {tools.map((tool, i) => (
-          <a
-            key={i}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+        {tools.map((tool) => (
+          <Link
+            key={tool.path}
             href={tool.path}
-            className="p-5 rounded-[14px] cursor-pointer transition-all hover:-translate-y-0.5 block relative"
-            style={{
-              background: "var(--color-background-primary)",
-              border: "0.5px solid var(--color-border-tertiary)",
-              color: "inherit",
-              textDecoration: "none",
-            }}
+            className="group relative p-6 rounded-2xl border border-border bg-background hover:border-brand-accent/30 hover:bg-muted/5 transition-all duration-300 overflow-hidden"
           >
-            {/* Icon */}
-            <div
-              className="w-10 h-10 rounded-[10px] flex items-center justify-center text-xl mb-2.5"
-              style={{ background: "rgba(52,152,219,0.1)" }}
-            >
-              {tool.icon}
+            {/* Status Indicator */}
+            <div className="absolute top-6 right-6">
+              <span 
+                className="mono-label text-[8px] px-2 py-0.5 rounded-full border border-current"
+                style={{ 
+                  color: badges[tool.badge as BadgeKey].color,
+                  backgroundColor: `${badges[tool.badge as BadgeKey].color}10`
+                }}
+              >
+                {tool.badge}
+              </span>
             </div>
 
-            <h3
-              className="font-['Syne'] text-sm font-bold mb-1.5"
-              style={{ color: "var(--color-text-primary)" }}
-            >
-              {tool.name}
-            </h3>
+            <div className="flex gap-6">
+              <div className="w-14 h-14 rounded-xl bg-muted border border-border flex items-center justify-center text-3xl group-hover:bg-brand-accent group-hover:text-white transition-colors duration-500">
+                {tool.icon}
+              </div>
 
-            <p
-              className="text-[11.5px] leading-relaxed mb-2.5"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              {tool.desc}
-            </p>
-
-            <span
-              className="text-[10px] px-2 py-0.5 rounded-[20px] font-medium"
-              style={badges[tool.badge as BadgeKey]}
-            >
-              {tool.badge}
-            </span>
-
-            {/* Arrow */}
-            <div
-              className="absolute bottom-3.5 right-3.5 text-[14px] opacity-0 translate-x-[-4px] transition-all"
-              style={{ color: "#3498DB" }}
-            >
-              →
+              <div className="flex-1 space-y-2">
+                <h3 className="text-xl font-display font-medium tracking-tight text-foreground">
+                  {tool.name}
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed uppercase tracking-widest leading-relaxed line-clamp-2">
+                  {tool.desc}
+                </p>
+                <div className="pt-2 flex items-center gap-2 text-brand-accent opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                  <span className="mono-label text-[9px] font-bold">INITIALIZE MODULE</span>
+                  <ChevronRight className="w-3 h-3" />
+                </div>
+              </div>
             </div>
-          </a>
+
+            {/* Decorative background number */}
+            <div className="absolute -bottom-4 -right-2 text-8xl font-display font-black text-foreground/[0.02] select-none pointer-events-none group-hover:text-brand-accent/[0.05] transition-colors">
+              {tool.name.charAt(0)}
+            </div>
+          </Link>
         ))}
       </div>
     </section>

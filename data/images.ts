@@ -57,7 +57,7 @@ export const imageTools: ImageTool[] = [
     name: "Image Converter",
     desc: "Convert between JPG, PNG, WEBP, AVIF, and more formats",
     badge: "Free",
-    path: "/images/converter",
+    path: "/files/converter",
   },
   {
     icon: "✂️",
@@ -101,16 +101,29 @@ export const imageTools: ImageTool[] = [
     badge: "Pro",
     path: "/images/effects",
   },
+  {
+    icon: "🧬",
+    name: "Design System Generator",
+    desc: "Extract color palette, typography, and design notes from UI screenshots",
+    badge: "New",
+    path: "/images/design-system-generator",
+  },
 ];
 
-export const badges: Record<BadgeKey, { bg: string; color: string }> = {
+export const badges: Record<
+  BadgeKey,
+  { bg: string; color: string }
+> = {
   Free: { bg: "rgba(0,200,150,0.12)", color: "#00A87A" },
   Pro: { bg: "rgba(124,92,255,0.12)", color: "#7C5CFF" },
   New: { bg: "rgba(255,92,53,0.12)", color: "#FF5C35" },
 };
 
 export const IMAGE_PAGE_STATS = [
-  { num: String(imageTools.length), label: "Tools available" },
+  {
+    num: String(imageTools.length),
+    label: "Tools available",
+  },
   { num: "100%", label: "Browser-based" },
   { num: "0 MB", label: "Server uploads*" },
 ] as const;

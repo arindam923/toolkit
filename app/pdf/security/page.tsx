@@ -67,14 +67,14 @@ export default function PdfSecurityTool() {
       {({ files }) => (
         <div className="space-y-4">
           {files.length > 0 && (
-            <div className="p-4 rounded-[10px]" style={{ background: "var(--color-background-secondary)" }}>
+            <div className="p-4 rounded-xl border border-border bg-muted/30">
               <div className="flex items-start gap-3">
                 <div className="text-2xl">📄</div>
-                <div>
-                  <h3 className="text-xs font-medium mb-1" style={{ color: "var(--color-text-primary)" }}>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-xs font-bold mono-label text-foreground mb-1">
                     Selected PDF
                   </h3>
-                  <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
+                  <p className="text-xs text-muted-foreground truncate">
                     {files[0].file.name} ({(files[0].file.size / 1024 / 1024).toFixed(2)} MB)
                   </p>
                 </div>
@@ -82,12 +82,9 @@ export default function PdfSecurityTool() {
             </div>
           )}
 
-          <div>
-            <label
-              className="block text-xs font-medium mb-1.5"
-              style={{ color: "var(--color-text-primary)" }}
-            >
-              Mode
+          <div className="space-y-2">
+            <label className="block text-[10px] font-bold mono-label text-muted-foreground">
+              Processing Mode
             </label>
             <div className="flex flex-wrap gap-2">
               {[
@@ -96,16 +93,16 @@ export default function PdfSecurityTool() {
               ].map((option) => (
                 <button
                   key={option.key}
+                  disabled={option.key === "lock"}
                   onClick={() => {
-                    setSettings(prev => ({ ...prev, mode: option.key as any }));
+                    setSettings((prev) => ({ ...prev, mode: option.key as any }));
                     setUnlockError("");
                   }}
-                  className={`px-3 py-1.5 rounded-[10px] text-xs font-medium border transition-all ${
+                  className={`px-3 py-2 rounded border transition-all mono-label text-[10px] ${
                     settings.mode === option.key
-                      ? "bg-[#7C5CFF] text-white border-[#7C5CFF]"
-                      : "bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border-tertiary)] opacity-50"
+                      ? "bg-foreground text-background border-foreground shadow-[0_0_15px_rgba(0,0,0,0.1)]"
+                      : "bg-background text-muted-foreground border-border hover:border-foreground disabled:opacity-30 disabled:cursor-not-allowed"
                   }`}
-                  disabled={option.key === "lock"}
                 >
                   {option.label}
                 </button>
@@ -114,11 +111,8 @@ export default function PdfSecurityTool() {
           </div>
 
           {settings.mode === "unlock" && (
-            <div>
-              <label
-                className="block text-xs font-medium mb-1.5"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold mono-label text-muted-foreground">
                 PDF Password (if any)
               </label>
               <input
@@ -128,35 +122,32 @@ export default function PdfSecurityTool() {
                   setUnlockPassword(e.target.value);
                   setUnlockError("");
                 }}
-                placeholder="Enter password if the PDF is protected"
-                className="w-full px-2.5 py-1.5 rounded-[10px] text-xs border"
-                style={{
-                  background: "var(--color-background-secondary)",
-                  borderColor: unlockError ? "#ef4444" : "var(--color-border-tertiary)",
-                  color: "var(--color-text-primary)",
-                }}
+                placeholder="EXECUTE DECRYPTION PASS..."
+                className={`w-full px-4 py-2.5 rounded border font-mono text-xs uppercase tracking-wider outline-none transition-all ${
+                  unlockError
+                    ? "border-red-500 bg-red-500/5 text-red-500"
+                    : "border-border bg-muted/30 focus:border-brand-accent focus:bg-background"
+                }`}
               />
               {unlockError && (
-                <p className="text-xs mt-1" style={{ color: "#ef4444" }}>
+                <p className="text-[10px] font-bold mono-label text-red-500 mt-1">
                   {unlockError}
                 </p>
               )}
             </div>
           )}
 
-          <div className="p-3 rounded-[10px]" style={{ background: "var(--color-background-secondary)" }}>
-            <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-              <strong>Tip:</strong> This tool helps you remove password protection from PDFs. Simply upload your PDF and click Process to attempt to remove any encryption.
-            </p>
+          <div className="p-4 rounded-xl border border-border bg-muted/30 text-xs text-muted-foreground leading-relaxed">
+            <span className="mono-label text-foreground mr-2">Tip</span>
+            This module removes standard PDF password protection. Upload the file, enter the password if known, and execute the process.
           </div>
 
-          <div className="p-3 rounded-[10px]" style={{ background: "rgba(124,92,255,0.08)", border: "0.5px solid rgba(124,92,255,0.2)" }}>
-            <h4 className="text-xs font-medium mb-1" style={{ color: "var(--color-text-primary)" }}>
-              Note
+          <div className="p-4 rounded-xl border border-brand-accent/20 bg-brand-accent/5 text-xs text-muted-foreground leading-relaxed relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-brand-accent" />
+            <h4 className="mono-label text-brand-accent font-bold mb-1">
+              Technical Note
             </h4>
-            <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-              Adding password protection to PDFs requires advanced encryption features. This feature will be available in a future update.
-            </p>
+            Adding high-entropy encryption to Pdfs requires advanced cryptographic primitives. This feature is currently in development.
           </div>
         </div>
       )}

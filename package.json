@@ -17,6 +17,8 @@
     "browser-image-compression": "^2.0.2",
     "color-thief": "^2.2.5",
     "jszip": "^3.10.1",
+    "lucide-react": "^1.7.0",
+    "motion": "^12.38.0",
     "next": "16.1.6",
     "onnxruntime-web": "^1.24.3",
     "pdf": "^0.1.0",

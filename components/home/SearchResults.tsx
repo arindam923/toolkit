@@ -4,13 +4,47 @@ interface SearchResultsProps {
   query: string;
 }
 
+const FORMAT_ALIASES: Record<string, string[]> = {
+  jpg: ["jpeg", "jpg"],
+  jpeg: ["jpg", "jpeg"],
+  png: ["png"],
+  webp: ["webp"],
+  avif: ["avif"],
+  heic: ["heic", "heif"],
+  pdf: ["pdf"],
+  docx: ["docx", "word"],
+  gif: ["gif"],
+  mp4: ["mp4", "video"],
+};
+
+function matchesFormat(text: string, query: string): boolean {
+  const lowerQuery = query.toLowerCase();
+  const lowerText = text.toLowerCase();
+  
+  for (const [format, aliases] of Object.entries(FORMAT_ALIASES)) {
+    if (format === lowerQuery || aliases.includes(lowerQuery)) {
+      if (lowerText.includes(format)) return true;
+      for (const alias of aliases) {
+        if (lowerText.includes(alias)) return true;
+      }
+    }
+  }
+  return false;
+}
+
 export default function SearchResults({ query }: SearchResultsProps) {
-  const results = allTools.filter(
-    (tool) =>
-      tool.name.toLowerCase().includes(query.toLowerCase()) ||
-      tool.desc.toLowerCase().includes(query.toLowerCase()) ||
-      tool.category.toLowerCase().includes(query.toLowerCase()),
-  );
+  const lowerQuery = query.toLowerCase();
+  
+  const results = allTools.filter((tool) => {
+    const nameMatch = tool.name.toLowerCase().includes(lowerQuery);
+    const descMatch = tool.desc.toLowerCase().includes(lowerQuery);
+    const categoryMatch = tool.category.toLowerCase().includes(lowerQuery);
+    const formatMatch = FORMAT_ALIASES[lowerQuery] 
+      ? matchesFormat(tool.name, lowerQuery) || matchesFormat(tool.desc, lowerQuery)
+      : false;
+    
+    return nameMatch || descMatch || categoryMatch || formatMatch;
+  });
 
   return (
     <section className="mb-3">
