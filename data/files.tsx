@@ -1,25 +1,17 @@
 
 import type { ReactNode } from "react";
 import {
-  Search,
   FileText,
   Image as ImageIcon,
   Shield,
   Type,
-  Sun,
-  Moon,
-  ArrowRight,
   Zap,
-  Cpu,
   Download,
   Lock,
   Scissors,
   Layers,
   Maximize,
   PenTool,
-  Grid,
-  ChevronRight,
-  Command,
 } from "lucide-react";
 
 export type BadgeKey = "Free" | "Pro" | "New" | "Coming Soon";
@@ -41,7 +33,6 @@ export type Category =
   | "Image"
   | "File"
   | "Security"
-  | "Video"
   | "Text";
 
 export interface Tool {
@@ -153,7 +144,7 @@ export const TOOLS: Tool[] = [
     id: "img-metadata",
     name: "Image Metadata Editor",
     description:
-      "View and edit EXIF, IPTC, and GPS metadata. Add copyright information, author details, and descriptions.",
+      "View and edit basic EXIF metadata (title, description, artist, copyright) for JPEG images.",
     category: "Image",
     href: "/images/metadata",
     icon: <FileText className="w-4 h-4" />,
@@ -201,7 +192,7 @@ export const TOOLS: Tool[] = [
     id: "img-upscaler",
     name: "Image Upscaler",
     description:
-      "Upscale images using AI with multiple free strategies. Works in any browser!",
+      "Upscale images using Gemini AI image editing. Requires a GEMINI_API_KEY on the server.",
     category: "Image",
     href: "/images/upscaler",
     icon: <Maximize className="w-4 h-4" />,
@@ -226,19 +217,19 @@ export const TOOLS: Tool[] = [
     id: "pdf-annotate",
     name: "PDF Annotator",
     description:
-      "Add annotations, comments, highlights, and other markups to PDF documents.",
+      "Add text annotations to the first page of PDF documents. Choose position, size, and color.",
     category: "PDF",
     href: "/pdf/annotate",
     icon: <PenTool className="w-4 h-4" />,
     isPaid: true,
     mcpAvailable: false,
-    status: "Beta",
+    status: "Stable",
   },
   {
     id: "pdf-compress",
     name: "PDF Compressor",
     description:
-      "Reduce PDF file size without losing quality using advanced compression algorithms.",
+      "Reduce PDF file size by stripping metadata, removing annotations, and using object streams.",
     category: "PDF",
     href: "/pdf/compress",
     icon: <Download className="w-4 h-4" />,
@@ -250,7 +241,7 @@ export const TOOLS: Tool[] = [
     id: "pdf-convert",
     name: "PDF to Word",
     description:
-      "Convert PDF documents to editable Word (.docx) files with preserved formatting.",
+      "Convert PDF documents to editable Word (.docx) files with preserved text and page structure.",
     category: "PDF",
     href: "/pdf/convert",
     icon: <FileText className="w-4 h-4" />,
@@ -284,9 +275,9 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "pdf-ocr",
-    name: "PDF OCR",
+    name: "PDF Text Extractor",
     description:
-      "Extract text from PDF documents. Perfect for copying content from scanned documents.",
+      "Extract selectable text from PDF documents. True OCR for scanned images is coming soon.",
     category: "PDF",
     href: "/pdf/ocr",
     icon: <Type className="w-4 h-4" />,
@@ -298,7 +289,7 @@ export const TOOLS: Tool[] = [
     id: "pdf-redact",
     name: "PDF Redactor",
     description:
-      "Redact sensitive information from PDF documents to ensure privacy and compliance.",
+      "Search and redact sensitive text from PDF documents. Each matched occurrence is covered with a black rectangle.",
     category: "PDF",
     href: "/pdf/redact",
     icon: <Shield className="w-4 h-4" />,
@@ -308,9 +299,9 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "pdf-security",
-    name: "PDF Lock / Unlock",
+    name: "PDF Unlock",
     description:
-      "Remove password protection from PDF documents. (Password protection coming soon)",
+      "Remove password protection from PDF documents. Enter the current password to create an unencrypted copy.",
     category: "PDF",
     href: "/pdf/security",
     icon: <Lock className="w-4 h-4" />,
@@ -334,7 +325,7 @@ export const TOOLS: Tool[] = [
     id: "pdf-to-img",
     name: "PDF to Image",
     description:
-      "Convert PDF pages to high-quality images in various formats including JPG, PNG, and WebP.",
+      "Convert PDF pages to high-quality PNG, JPEG, or WebP images. Multi-page exports are packaged as a ZIP file.",
     category: "PDF",
     href: "/pdf/to-image",
     icon: <ImageIcon className="w-4 h-4" />,
@@ -471,7 +462,7 @@ export const TOOLS: Tool[] = [
     description:
       "Encrypt files with AES-256-GCM using a password, or decrypt previously encrypted files.",
     category: "Security",
-    href: "/security_disabled/file-encrypt",
+    href: "/security/file-encrypt",
     icon: <Lock className="w-4 h-4" />,
     isPaid: false,
     mcpAvailable: true,
@@ -481,7 +472,7 @@ export const TOOLS: Tool[] = [
     id: "hash-gen",
     name: "Hash Generator",
     description:
-      "Generate cryptographic hashes (SHA-256, SHA-512, MD5, SHA-1) from text or files.",
+      "Generate cryptographic hashes (SHA-1, SHA-256, SHA-512) from text or files.",
     category: "Security",
     href: "/security/hash-generator",
     icon: <Shield className="w-4 h-4" />,
@@ -537,24 +528,21 @@ export const TOOLS: Tool[] = [
     mcpAvailable: false,
     status: "Stable",
   },
-  // Text Tools
   {
     id: "json-format",
     name: "JSON Format",
-    description:
-      "Format and validate JSON data with proper indentation.",
+    description: "Pretty-print or minify JSON data with syntax validation.",
     category: "Text",
     href: "/text/json-format",
-    icon: <Type className="w-4 h-4" />,
+    icon: <FileText className="w-4 h-4" />,
     isPaid: false,
-    mcpAvailable: true,
+    mcpAvailable: false,
     status: "Stable",
   },
   {
     id: "word-count",
     name: "Word Count",
-    description:
-      "Count words, characters, sentences, and paragraphs in text.",
+    description: "Count words, characters, lines, and paragraphs in text.",
     category: "Text",
     href: "/text/word-count",
     icon: <Type className="w-4 h-4" />,
@@ -563,61 +551,56 @@ export const TOOLS: Tool[] = [
     status: "Stable",
   },
   {
-    id: "csv-json",
+    id: "csv-to-json",
     name: "CSV to JSON",
-    description:
-      "Convert CSV data to JSON format.",
+    description: "Convert CSV data to JSON array format.",
     category: "Text",
-    href: "/text/csv-json",
-    icon: <Type className="w-4 h-4" />,
-    isPaid: false,
-    mcpAvailable: true,
-    status: "Stable",
-  },
-  {
-    id: "text-diff",
-    name: "Text Diff",
-    description:
-      "Compare text differences between two strings.",
-    category: "Text",
-    href: "/text/text-diff",
-    icon: <Type className="w-4 h-4" />,
+    href: "/text/csv-to-json",
+    icon: <FileText className="w-4 h-4" />,
     isPaid: false,
     mcpAvailable: false,
     status: "Stable",
   },
   {
-    id: "markdown-html",
+    id: "text-diff",
+    name: "Text Diff",
+    description: "Compare two texts and highlight differences line by line.",
+    category: "Text",
+    href: "/text/text-diff",
+    icon: <FileText className="w-4 h-4" />,
+    isPaid: false,
+    mcpAvailable: false,
+    status: "Stable",
+  },
+  {
+    id: "markdown-to-html",
     name: "Markdown to HTML",
-    description:
-      "Convert Markdown to HTML.",
+    description: "Convert Markdown text to HTML markup.",
     category: "Text",
-    href: "/text/markdown-html",
-    icon: <Type className="w-4 h-4" />,
+    href: "/text/markdown-to-html",
+    icon: <FileText className="w-4 h-4" />,
     isPaid: false,
-    mcpAvailable: true,
+    mcpAvailable: false,
     status: "Stable",
   },
   {
-    id: "html-markdown",
+    id: "html-to-markdown",
     name: "HTML to Markdown",
-    description:
-      "Convert HTML to Markdown.",
+    description: "Convert HTML markup to clean Markdown text.",
     category: "Text",
-    href: "/text/html-markdown",
-    icon: <Type className="w-4 h-4" />,
+    href: "/text/html-to-markdown",
+    icon: <FileText className="w-4 h-4" />,
     isPaid: false,
-    mcpAvailable: true,
+    mcpAvailable: false,
     status: "Stable",
   },
   {
-    id: "text-minifier",
+    id: "text-minify",
     name: "Text Minifier",
-    description:
-      "Minify HTML, CSS, and JavaScript code.",
+    description: "Remove extra whitespace and minify text content.",
     category: "Text",
-    href: "/text/text-minifier",
-    icon: <Type className="w-4 h-4" />,
+    href: "/text/text-minify",
+    icon: <FileText className="w-4 h-4" />,
     isPaid: false,
     mcpAvailable: false,
     status: "Stable",
