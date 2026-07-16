@@ -3,14 +3,23 @@
 import { useState, useEffect } from "react";
 import BasePdfTool, { PdfFile } from "../components/BasePdfTool";
 import { PDFDocument } from "pdf-lib";
+import JSZip from "jszip";
+
+type SplitType = "single" | "range" | "every";
 
 interface SplitSettings {
-  splitType: "single" | "range" | "every";
+  splitType: SplitType;
   pageNumber: number;
   rangeStart: number;
   rangeEnd: number;
   everyN: number;
 }
+
+const SPLIT_OPTIONS = [
+  { key: "single", label: "Single Page" },
+  { key: "range", label: "Page Range" },
+  { key: "every", label: "Every N Pages" },
+] as const;
 
 export default function SplitPdfTool() {
   const [files, setFiles] = useState<PdfFile[]>([]);
@@ -23,90 +32,118 @@ export default function SplitPdfTool() {
   });
   const [pageCounts, setPageCounts] = useState<Record<string, number>>({});
 
-  // Load PDF page count when files are uploaded
   useEffect(() => {
+    let cancelled = false;
+
     const loadPageCounts = async () => {
-      const newPageCounts: Record<string, number> = {};
-      
-      for (const file of files) {
-        if (!newPageCounts[file.id]) {
+      if (files.length === 0) return;
+
+      const counts = await Promise.all(
+        files.map(async (file) => {
           try {
             const arrayBuffer = await file.file.arrayBuffer();
             const pdfDoc = await PDFDocument.load(arrayBuffer);
-            newPageCounts[file.id] = pdfDoc.getPageCount();
-          } catch (error) {
-            console.error("Failed to load PDF:", error);
-            newPageCounts[file.id] = 0;
+            return { id: file.id, count: pdfDoc.getPageCount() };
+          } catch {
+            return { id: file.id, count: 0 };
           }
-        }
-      }
+        }),
+      );
 
+      if (cancelled) return;
+
+      const newPageCounts: Record<string, number> = {};
+      for (const { id, count } of counts) {
+        newPageCounts[id] = count;
+      }
       setPageCounts(newPageCounts);
+
+      const maxPages = newPageCounts[files[0].id] || 1;
+      setSettings((prev) => {
+        const next: SplitSettings = { ...prev };
+        if (next.pageNumber > maxPages) next.pageNumber = maxPages;
+        if (next.rangeStart > maxPages) next.rangeStart = maxPages;
+        if (next.rangeEnd > maxPages) next.rangeEnd = maxPages;
+        if (next.rangeStart > next.rangeEnd) next.rangeEnd = next.rangeStart;
+        if (next.everyN > maxPages) next.everyN = maxPages;
+        return next;
+      });
     };
 
-    if (files.length > 0) {
-      loadPageCounts();
-    }
+    loadPageCounts();
+
+    return () => {
+      cancelled = true;
+    };
   }, [files]);
 
-  // Split PDF
   const handleSplit = async (pdfFile: PdfFile): Promise<string> => {
-    try {
-      const arrayBuffer = await pdfFile.file.arrayBuffer();
-      const pdfDoc = await PDFDocument.load(arrayBuffer);
-      const pageCount = pdfDoc.getPageCount();
+    const arrayBuffer = await pdfFile.file.arrayBuffer();
+    const pdfDoc = await PDFDocument.load(arrayBuffer);
+    const pageCount = pdfDoc.getPageCount();
+    const baseName = pdfFile.file.name.replace(/\.[^.]+$/, "");
 
-      const newPdf = await PDFDocument.create();
-
-      switch (settings.splitType) {
-        case "single":
-          if (settings.pageNumber < 1 || settings.pageNumber > pageCount) {
-            throw new Error(`Page number must be between 1 and ${pageCount}`);
-          }
-          const singlePage = await newPdf.copyPages(pdfDoc, [settings.pageNumber - 1]);
-          newPdf.addPage(singlePage[0]);
-          break;
-
-        case "range":
-          if (settings.rangeStart < 1 || settings.rangeEnd > pageCount || settings.rangeStart > settings.rangeEnd) {
-            throw new Error(`Range must be between 1 and ${pageCount}`);
-          }
-          const pageIndices = [];
-          for (let i = settings.rangeStart - 1; i < settings.rangeEnd; i++) {
-            pageIndices.push(i);
-          }
-          const rangePages = await newPdf.copyPages(pdfDoc, pageIndices);
-          rangePages.forEach(page => newPdf.addPage(page));
-          break;
-
-        case "every":
-          if (settings.everyN < 1 || settings.everyN > pageCount) {
-            throw new Error(`Every N pages must be between 1 and ${pageCount}`);
-          }
-          // This would split into multiple files, but for now we'll just extract first N pages
-          const everyPages = await newPdf.copyPages(pdfDoc, Array.from({ length: settings.everyN }, (_, i) => i));
-          everyPages.forEach(page => newPdf.addPage(page));
-          break;
+    if (settings.splitType === "single") {
+      if (settings.pageNumber < 1 || settings.pageNumber > pageCount) {
+        throw new Error(`Page number must be between 1 and ${pageCount}`);
       }
-
-      const pdfBytes = await newPdf.save();
-      const blob = new Blob([pdfBytes as unknown as ArrayBuffer], { type: "application/pdf" });
-      const dataUrl = URL.createObjectURL(blob);
-      
-      return dataUrl;
-    } catch (error) {
-      console.error("Split failed:", error);
-      throw new Error(error instanceof Error ? error.message : "Failed to split PDF");
+      const newPdf = await PDFDocument.create();
+      const [page] = await newPdf.copyPages(pdfDoc, [settings.pageNumber - 1]);
+      newPdf.addPage(page);
+      const bytes = await newPdf.save();
+      const blob = new Blob([bytes as unknown as BlobPart], { type: "application/pdf" });
+      return URL.createObjectURL(blob);
     }
+
+    if (settings.splitType === "range") {
+      if (
+        settings.rangeStart < 1 ||
+        settings.rangeEnd > pageCount ||
+        settings.rangeStart > settings.rangeEnd
+      ) {
+        throw new Error(`Range must be between 1 and ${pageCount}`);
+      }
+      const newPdf = await PDFDocument.create();
+      const indices = Array.from({ length: settings.rangeEnd - settings.rangeStart + 1 }, (_, i) => i + settings.rangeStart - 1);
+      const pages = await newPdf.copyPages(pdfDoc, indices);
+      pages.forEach((page) => newPdf.addPage(page));
+      const bytes = await newPdf.save();
+      const blob = new Blob([bytes as unknown as BlobPart], { type: "application/pdf" });
+      return URL.createObjectURL(blob);
+    }
+
+    // every N pages — produce a ZIP of multiple PDFs
+    if (settings.everyN < 1 || settings.everyN > pageCount) {
+      throw new Error(`Every N pages must be between 1 and ${pageCount}`);
+    }
+
+    const zip = new JSZip();
+    let chunkIndex = 1;
+    for (let start = 0; start < pageCount; start += settings.everyN) {
+      const end = Math.min(start + settings.everyN, pageCount);
+      const newPdf = await PDFDocument.create();
+      const indices = Array.from({ length: end - start }, (_, i) => start + i);
+      const pages = await newPdf.copyPages(pdfDoc, indices);
+      pages.forEach((page) => newPdf.addPage(page));
+      const bytes = await newPdf.save();
+      zip.file(`${baseName}_part_${chunkIndex}.pdf`, bytes);
+      chunkIndex++;
+    }
+
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    return URL.createObjectURL(zipBlob);
   };
+
+  const maxPages = pageCounts[files[0]?.id] || 1;
 
   return (
     <BasePdfTool
       title="PDF Splitter"
-      description="Extract specific pages or ranges from PDF documents. Split by single page, range, or every N pages."
+      description="Extract a single page, a page range, or split into chunks every N pages. Multi-part splits are packaged as a ZIP file."
       icon="✂️"
       onProcess={handleSplit}
       onFilesChange={setFiles}
+      downloadExtension={settings.splitType === "every" ? "zip" : "pdf"}
     >
       {({ files }) => (
         <div className="space-y-4">
@@ -119,7 +156,7 @@ export default function SplitPdfTool() {
                     Selected PDF
                   </h3>
                   <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-                    {files[0].file.name} ({pageCounts[files[0].id]} pages)
+                    {files[0].file.name} ({pageCounts[files[0].id] || "?"} pages)
                   </p>
                 </div>
               </div>
@@ -127,21 +164,17 @@ export default function SplitPdfTool() {
           )}
 
           <div>
-            <label
-              className="block text-xs font-medium mb-1.5"
-              style={{ color: "var(--color-text-primary)" }}
-            >
+            <span className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
               Split Type
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: "single", label: "Single Page" },
-                { key: "range", label: "Page Range" },
-                { key: "every", label: "Every N Pages" },
-              ].map((option) => (
+            </span>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Split type">
+              {SPLIT_OPTIONS.map((option) => (
                 <button
                   key={option.key}
-                  onClick={() => setSettings(prev => ({ ...prev, splitType: option.key as any }))}
+                  type="button"
+                  role="radio"
+                  aria-checked={settings.splitType === option.key}
+                  onClick={() => setSettings((prev) => ({ ...prev, splitType: option.key as SplitType }))}
                   className={`px-3 py-1.5 rounded-[10px] text-xs font-medium border transition-all ${
                     settings.splitType === option.key
                       ? "bg-[#7C5CFF] text-white border-[#7C5CFF]"
@@ -156,18 +189,16 @@ export default function SplitPdfTool() {
 
           {settings.splitType === "single" && (
             <div>
-              <label
-                className="block text-xs font-medium mb-1.5"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+              <label htmlFor="split-page-number" className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
                 Page Number
               </label>
               <input
+                id="split-page-number"
                 type="number"
-                min="1"
-                max={pageCounts[files[0]?.id] || 100}
+                min={1}
+                max={maxPages}
                 value={settings.pageNumber}
-                onChange={(e) => setSettings(prev => ({ ...prev, pageNumber: parseInt(e.target.value) || 1 }))}
+                onChange={(e) => setSettings((prev) => ({ ...prev, pageNumber: parseInt(e.target.value, 10) || 1 }))}
                 className="w-full px-2.5 py-1.5 rounded-[10px] text-xs border"
                 style={{
                   background: "var(--color-background-secondary)",
@@ -176,7 +207,7 @@ export default function SplitPdfTool() {
                 }}
               />
               <div className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
-                Range: 1 - {pageCounts[files[0]?.id] || "?"} pages
+                Range: 1 - {maxPages} pages
               </div>
             </div>
           )}
@@ -184,18 +215,16 @@ export default function SplitPdfTool() {
           {settings.splitType === "range" && (
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label
-                  className="block text-xs font-medium mb-1.5"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
+                <label htmlFor="split-range-start" className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
                   From Page
                 </label>
                 <input
+                  id="split-range-start"
                   type="number"
-                  min="1"
-                  max={pageCounts[files[0]?.id] || 100}
+                  min={1}
+                  max={maxPages}
                   value={settings.rangeStart}
-                  onChange={(e) => setSettings(prev => ({ ...prev, rangeStart: parseInt(e.target.value) || 1 }))}
+                  onChange={(e) => setSettings((prev) => ({ ...prev, rangeStart: parseInt(e.target.value, 10) || 1 }))}
                   className="w-full px-2.5 py-1.5 rounded-[10px] text-xs border"
                   style={{
                     background: "var(--color-background-secondary)",
@@ -205,18 +234,16 @@ export default function SplitPdfTool() {
                 />
               </div>
               <div>
-                <label
-                  className="block text-xs font-medium mb-1.5"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
+                <label htmlFor="split-range-end" className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
                   To Page
                 </label>
                 <input
+                  id="split-range-end"
                   type="number"
-                  min="1"
-                  max={pageCounts[files[0]?.id] || 100}
+                  min={1}
+                  max={maxPages}
                   value={settings.rangeEnd}
-                  onChange={(e) => setSettings(prev => ({ ...prev, rangeEnd: parseInt(e.target.value) || 1 }))}
+                  onChange={(e) => setSettings((prev) => ({ ...prev, rangeEnd: parseInt(e.target.value, 10) || 1 }))}
                   className="w-full px-2.5 py-1.5 rounded-[10px] text-xs border"
                   style={{
                     background: "var(--color-background-secondary)",
@@ -230,18 +257,16 @@ export default function SplitPdfTool() {
 
           {settings.splitType === "every" && (
             <div>
-              <label
-                className="block text-xs font-medium mb-1.5"
-                style={{ color: "var(--color-text-primary)" }}
-              >
-                Every N Pages
+              <label htmlFor="split-every-n" className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
+                Pages Per File
               </label>
               <input
+                id="split-every-n"
                 type="number"
-                min="1"
-                max={pageCounts[files[0]?.id] || 100}
+                min={1}
+                max={maxPages}
                 value={settings.everyN}
-                onChange={(e) => setSettings(prev => ({ ...prev, everyN: parseInt(e.target.value) || 1 }))}
+                onChange={(e) => setSettings((prev) => ({ ...prev, everyN: parseInt(e.target.value, 10) || 1 }))}
                 className="w-full px-2.5 py-1.5 rounded-[10px] text-xs border"
                 style={{
                   background: "var(--color-background-secondary)",
@@ -249,12 +274,15 @@ export default function SplitPdfTool() {
                   color: "var(--color-text-primary)",
                 }}
               />
+              <div className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                Creates one PDF per {settings.everyN} pages, packaged as a ZIP.
+              </div>
             </div>
           )}
 
           <div className="p-3 rounded-[10px]" style={{ background: "var(--color-background-secondary)" }}>
             <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-              <strong>Tip:</strong> For multi-page PDFs, use the range option to extract specific sections. The page count is automatically detected.
+              <strong>Tip:</strong> Use the range option to extract specific sections. &quot;Every N pages&quot; is useful for dividing a large document into smaller chunks.
             </p>
           </div>
         </div>

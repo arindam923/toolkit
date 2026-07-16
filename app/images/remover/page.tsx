@@ -10,6 +10,7 @@ import {
   PreTrainedModel,
   Processor,
 } from "@huggingface/transformers";
+import { logger } from "@/lib/logger";
 
 // Model configurations
 const WEBGPU_MODEL_ID = "Xenova/modnet";
@@ -51,8 +52,12 @@ const state: ModelState = {
 };
 
 // Initialize WebGPU with proper error handling
+interface NavigatorWithGPU extends Navigator {
+  gpu?: { requestAdapter(): Promise<unknown> };
+}
+
 async function initializeWebGPU() {
-  const gpu = (navigator as any).gpu;
+  const gpu = (navigator as NavigatorWithGPU).gpu;
   if (!gpu) {
     return false;
   }
@@ -81,7 +86,7 @@ async function initializeWebGPU() {
     state.isWebGPUSupported = true;
     return true;
   } catch (error) {
-    console.error("WebGPU initialization failed:", error);
+    logger.error("WebGPU initialization failed", error);
     return false;
   }
 }
@@ -91,7 +96,7 @@ export async function initializeModel(forceModelId?: string): Promise<boolean> {
   try {
     // Always use RMBG-1.4 for iOS
     if (state.isIOS) {
-      console.log("iOS detected, using RMBG-1.4 model");
+      logger.debug("iOS detected, using RMBG-1.4 model");
       env.allowLocalModels = false;
       if (env.backends?.onnx?.wasm) {
         env.backends.onnx.wasm.proxy = true;
@@ -123,8 +128,9 @@ export async function initializeModel(forceModelId?: string): Promise<boolean> {
     }
 
     state.model = await AutoModel.from_pretrained(FALLBACK_MODEL_ID, {
-      progress_callback: (progressInfo: any) => {
-        console.log(`Loading model: ${Math.round(progressInfo.progress * 100)}%`);
+      progress_callback: (progressInfo: unknown) => {
+        const progress = (progressInfo as { progress?: number }).progress;
+        logger.debug(`Loading model: ${Math.round((progress ?? 0) * 100)}%`);
       },
     });
 
@@ -141,9 +147,9 @@ export async function initializeModel(forceModelId?: string): Promise<boolean> {
     state.currentModelId = selectedModelId;
     return true;
   } catch (error) {
-    console.error("Error initializing model:", error);
+    logger.error("Error initializing model", error);
     if (forceModelId === WEBGPU_MODEL_ID) {
-      console.log("Falling back to cross-browser model...");
+      logger.debug("Falling back to cross-browser model...");
       return initializeModel(FALLBACK_MODEL_ID);
     }
     throw new Error(error instanceof Error ? error.message : "Failed to initialize background removal model");
@@ -152,11 +158,11 @@ export async function initializeModel(forceModelId?: string): Promise<boolean> {
 
 // Get current model info
 export function getModelInfo(): ModelInfo {
-  return {
-    currentModelId: state.currentModelId,
-    isWebGPUSupported: Boolean((navigator as any).gpu),
-    isIOS: state.isIOS,
-  };
+    return {
+      currentModelId: state.currentModelId,
+      isWebGPUSupported: Boolean((navigator as NavigatorWithGPU).gpu),
+      isIOS: state.isIOS,
+    };
 }
 
 export async function processImage(image: File): Promise<File> {
@@ -210,26 +216,26 @@ export async function processImage(image: File): Promise<File> {
     const processedFile = new File([blob], `${fileName}-bg-removed.png`, { type: "image/png" });
     return processedFile;
   } catch (error) {
-    console.error("Error processing image:", error);
+    logger.error("Error processing image", error);
     throw new Error("Failed to process image");
   }
 }
 
 export async function processImages(images: File[]): Promise<File[]> {
-  console.log("Processing images...");
+  logger.debug("Processing images...");
   const processedFiles: File[] = [];
 
   for (const image of images) {
     try {
       const processedFile = await processImage(image);
       processedFiles.push(processedFile);
-      console.log("Successfully processed image", image.name);
+      logger.debug(`Successfully processed image: ${image.name}`);
     } catch (error) {
-      console.error("Error processing image", image.name, error);
+      logger.error(`Error processing image: ${image.name}`, error);
     }
   }
 
-  console.log("Processing images done");
+  logger.debug("Processing images done");
   return processedFiles;
 }
 

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import BasePdfTool, { PdfFile } from "../components/BasePdfTool";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument } from "pdf-lib";
+import { logger } from "@/lib/logger";
 
 export default function MergePdfTool() {
   const [files, setFiles] = useState<PdfFile[]>([]);
@@ -35,13 +36,13 @@ export default function MergePdfTool() {
       
       return dataUrl;
     } catch (error) {
-      console.error("Merge failed:", error);
+      logger.error("Merge failed", error);
       throw new Error("Failed to merge PDFs");
     }
   };
 
   // Handle process
-  const handleProcess = async (pdfFile: PdfFile): Promise<string> => {
+  const handleProcess = async (): Promise<string> => {
     // Since we need all files to merge, we ignore the individual file parameter
     return handleMerge();
   };

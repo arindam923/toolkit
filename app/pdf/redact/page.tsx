@@ -4,95 +4,123 @@ import { useState } from "react";
 import BasePdfTool, { PdfFile } from "../components/BasePdfTool";
 import { PDFDocument, rgb } from "pdf-lib";
 
+interface PdfTextItem {
+  str: string;
+  dir: string;
+  width: number;
+  height: number;
+  transform: number[];
+  fontName: string;
+  hasEOL: boolean;
+}
+
 interface RedactSettings {
-  mode: "placeholders" | "remove";
-  redactionText: string;
+  searchText: string;
+  redactionLabel: string;
+  caseSensitive: boolean;
+}
+
+interface Match {
+  page: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export default function PdfRedactorTool() {
-  const [, setFiles] = useState<PdfFile[]>([]);
   const [settings, setSettings] = useState<RedactSettings>({
-    mode: "placeholders",
-    redactionText: "[REDACTED]",
+    searchText: "",
+    redactionLabel: "[REDACTED]",
+    caseSensitive: false,
   });
+  const [matchCount, setMatchCount] = useState<number | null>(null);
 
-  // Redact PDF by adding black rectangles over text areas
+  const findTextMatches = async (pdfFile: PdfFile): Promise<Match[]> => {
+    const pdfjs = await import("pdfjs-dist");
+    pdfjs.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/pdf.worker.min.mjs`;
+
+    const arrayBuffer = await pdfFile.file.arrayBuffer();
+    const pdfDoc = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+    const matches: Match[] = [];
+    const query = settings.caseSensitive ? settings.searchText : settings.searchText.toLowerCase();
+
+    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1 });
+      const textContent = await page.getTextContent();
+
+      for (const item of textContent.items) {
+        const textItem = item as PdfTextItem;
+        const str = settings.caseSensitive ? textItem.str : textItem.str.toLowerCase();
+        if (!str || !str.includes(query)) continue;
+
+        const tx = textItem.transform;
+        const x = tx[4];
+        const y = viewport.height - tx[5]; // pdfjs uses bottom-left; pdf-lib uses bottom-left
+        const width = textItem.width;
+        const height = textItem.height || 10;
+
+        matches.push({ page: pageNum, x, y: y - height, width, height });
+      }
+    }
+
+    return matches;
+  };
+
   const handleRedact = async (pdfFile: PdfFile): Promise<string> => {
-    try {
-      const arrayBuffer = await pdfFile.file.arrayBuffer();
-      const pdfDoc = await PDFDocument.load(arrayBuffer);
+    if (!settings.searchText.trim()) {
+      throw new Error("Enter text to search for before redacting.");
+    }
 
-      // Get all pages
-      const pages = pdfDoc.getPages();
+    const matches = await findTextMatches(pdfFile);
+    setMatchCount(matches.length);
 
-      // Add redaction rectangles to each page
-      pages.forEach((page) => {
-        const { width, height } = page.getSize();
+    if (matches.length === 0) {
+      throw new Error(`No matches found for "${settings.searchText}".`);
+    }
 
-        if (settings.mode === "placeholders") {
-          // Add sample redaction rectangles at common text positions
-          // In a real implementation, you'd identify text positions using pdfjs-dist
-          page.drawRectangle({
-            x: 50,
-            y: height - 100,
-            width: width - 100,
-            height: 20,
-            color: rgb(0, 0, 0), // Black rectangle
-          });
+    const arrayBuffer = await pdfFile.file.arrayBuffer();
+    const pdfDoc = await PDFDocument.load(arrayBuffer);
+    const pages = pdfDoc.getPages();
 
-          page.drawText(settings.redactionText, {
-            x: 55,
-            y: height - 95,
-            size: 12,
-            color: rgb(1, 1, 1), // White text
-          });
+    for (const match of matches) {
+      const page = pages[match.page - 1];
+      if (!page) continue;
+      const { height: pageHeight } = page.getSize();
 
-          // Add another redaction area
-          page.drawRectangle({
-            x: 50,
-            y: height - 150,
-            width: width - 100,
-            height: 20,
-            color: rgb(0, 0, 0),
-          });
-        } else {
-          // Remove mode - just black rectangles
-          page.drawRectangle({
-            x: 50,
-            y: height - 100,
-            width: width - 100,
-            height: 20,
-            color: rgb(0, 0, 0),
-          });
+      // pdf-lib coordinates: origin is bottom-left
+      const drawY = pageHeight - match.y - match.height;
 
-          page.drawRectangle({
-            x: 50,
-            y: height - 150,
-            width: width - 100,
-            height: 20,
-            color: rgb(0, 0, 0),
-          });
-        }
+      page.drawRectangle({
+        x: match.x,
+        y: drawY,
+        width: match.width,
+        height: match.height,
+        color: rgb(0, 0, 0),
       });
 
-      // Save the redacted PDF
-      const redactedPdfBytes = await pdfDoc.save();
-      const blob = new Blob([redactedPdfBytes as unknown as ArrayBuffer], { type: "application/pdf" });
-      const dataUrl = URL.createObjectURL(blob);
-      return dataUrl;
-    } catch (error) {
-      console.error("Redaction failed:", error);
-      throw new Error(error instanceof Error ? error.message : "Failed to process PDF");
+      if (settings.redactionLabel.trim()) {
+        page.drawText(settings.redactionLabel, {
+          x: match.x + 2,
+          y: drawY + 2,
+          size: Math.max(6, match.height * 0.6),
+          color: rgb(1, 1, 1),
+        });
+      }
     }
+
+    const redactedBytes = await pdfDoc.save();
+    const blob = new Blob([redactedBytes as unknown as BlobPart], { type: "application/pdf" });
+    return URL.createObjectURL(blob);
   };
 
   return (
     <BasePdfTool
       title="PDF Redactor"
-      description="Redact sensitive information from PDF documents to ensure privacy and compliance."
+      description="Search and redact sensitive text from PDF documents. Each matched occurrence is covered with a black rectangle."
       icon="🔴"
       onProcess={handleRedact}
-      onFilesChange={setFiles}
     >
       {({ files }) => (
         <div className="space-y-4">
@@ -105,7 +133,7 @@ export default function PdfRedactorTool() {
                     Selected PDF
                   </h3>
                   <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-                    {files[0].file.name} ({(files[0].file.size / 1024 / 1024).toFixed(2)} MB)
+                    {files[0].file.name}
                   </p>
                 </div>
               </div>
@@ -113,67 +141,71 @@ export default function PdfRedactorTool() {
           )}
 
           <div>
-            <label
-              className="block text-xs font-medium mb-1.5"
-              style={{ color: "var(--color-text-primary)" }}
-            >
-              Mode
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
+              Text to Redact
             </label>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: "placeholders", label: "Placeholders" },
-                { key: "remove", label: "Remove (Black Out)" },
-              ].map((option) => (
-                <button
-                  key={option.key}
-                  onClick={() => setSettings(prev => ({ ...prev, mode: option.key as any }))}
-                  className={`px-3 py-1.5 rounded-[10px] text-xs font-medium border transition-all ${settings.mode === option.key
-                    ? "bg-[#7C5CFF] text-white border-[#7C5CFF]"
-                    : "bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border-tertiary)]"
-                    }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            <input
+              type="text"
+              value={settings.searchText}
+              onChange={(e) => setSettings((prev) => ({ ...prev, searchText: e.target.value }))}
+              placeholder="e.g. SSN, email address, name"
+              className="w-full px-3 py-2 rounded-[10px] text-xs border"
+              style={{
+                background: "var(--color-background-primary)",
+                borderColor: "var(--color-border-tertiary)",
+                color: "var(--color-text-primary)",
+              }}
+            />
           </div>
 
-          {settings.mode === "placeholders" && (
-            <div>
-              <label
-                className="block text-xs font-medium mb-1.5"
-                style={{ color: "var(--color-text-primary)" }}
-              >
-                Redaction Text
-              </label>
-              <input
-                type="text"
-                value={settings.redactionText}
-                onChange={(e) => setSettings(prev => ({ ...prev, redactionText: e.target.value }))}
-                className="w-full px-3 py-2 rounded-[10px] text-xs border"
-                style={{
-                  background: "var(--color-background-primary)",
-                  borderColor: "var(--color-border-tertiary)",
-                  color: "var(--color-text-primary)",
-                }}
-                placeholder="[REDACTED]"
-              />
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
+              Redaction Label (optional)
+            </label>
+            <input
+              type="text"
+              value={settings.redactionLabel}
+              onChange={(e) => setSettings((prev) => ({ ...prev, redactionLabel: e.target.value }))}
+              placeholder="[REDACTED]"
+              className="w-full px-3 py-2 rounded-[10px] text-xs border"
+              style={{
+                background: "var(--color-background-primary)",
+                borderColor: "var(--color-border-tertiary)",
+                color: "var(--color-text-primary)",
+              }}
+            />
+          </div>
+
+          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "var(--color-text-primary)" }}>
+            <input
+              type="checkbox"
+              checked={settings.caseSensitive}
+              onChange={(e) => setSettings((prev) => ({ ...prev, caseSensitive: e.target.checked }))}
+              className="w-3 h-3"
+              style={{ accentColor: "#7C5CFF" }}
+            />
+            Case-sensitive search
+          </label>
+
+          {matchCount !== null && (
+            <div
+              className="p-3 rounded-[10px] text-xs"
+              style={{
+                background: matchCount > 0 ? "rgba(34,197,94,0.08)" : "rgba(255,92,53,0.08)",
+                border: `0.5px solid ${matchCount > 0 ? "rgba(34,197,94,0.2)" : "rgba(255,92,53,0.2)"}`,
+                color: "var(--color-text-primary)",
+              }}
+            >
+              {matchCount > 0
+                ? `${matchCount} occurrence${matchCount === 1 ? "" : "s"} found and redacted.`
+                : `No occurrences found for "${settings.searchText}".`}
             </div>
           )}
 
-          <div className="p-3 rounded-[10px]" style={{ background: "rgba(34,197,94,0.08)", border: "0.5px solid rgba(34,197,94,0.2)" }}>
-            <h4 className="text-xs font-medium mb-1" style={{ color: "var(--color-text-primary)" }}>
-              ✅ Tool Ready
-            </h4>
+          <div className="p-3 rounded-[10px]" style={{ background: "var(--color-background-secondary)" }}>
             <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-              The PDF Redactor is now functional! Select a redaction mode and process your PDF to add basic redactions.
+              <strong>Tip:</strong> Run the tool once to preview; the output is saved with redactions applied. For graphical redaction (drawing boxes by hand), that feature is coming soon.
             </p>
-            <ul className="text-xs mt-2 space-y-1" style={{ color: "var(--color-text-secondary)" }}>
-              <li>• Add black rectangles to cover content</li>
-              <li>• Replace content with placeholder text</li>
-              <li>• Download redacted PDFs</li>
-              <li>• Customize redaction text</li>
-            </ul>
           </div>
         </div>
       )}

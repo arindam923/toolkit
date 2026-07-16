@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import ToolLayout from "@/components/shared/ToolLayout";
-import { FileSearch, ShieldCheck, ShieldAlert, ShieldQuestion, Info, RefreshCw, FileCheck, CheckCircle2, ChevronRight, Search } from "lucide-react";
+import { FileSearch, ShieldCheck, ShieldAlert, ShieldQuestion, Info, RefreshCw, FileCheck, ChevronRight, Search } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 async function calculateSHA256(
   data: ArrayBuffer,
@@ -175,7 +176,7 @@ export default function SecurityScannerTool() {
         riskFactors,
       });
     } catch (error) {
-      console.error("Scan failed:", error);
+      logger.error("Scan failed", error);
     } finally {
       setIsScanning(false);
     }

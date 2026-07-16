@@ -2,18 +2,13 @@
 
 import { useState, useEffect } from "react";
 import BasePdfTool, { PdfFile } from "../components/BasePdfTool";
-
-interface OcrSettings {
-  extractMethod: "text" | "layout";
-}
+import { logger } from "@/lib/logger";
 
 export default function PdfOcrTool() {
-  const [files, setFiles] = useState<PdfFile[]>([]);
-  const [settings, setSettings] = useState<OcrSettings>({
-    extractMethod: "text",
-  });
   const [extractedText, setExtractedText] = useState<Record<string, string>>({});
-  const [pdfjsLib, setPdfjsLib] = useState<any | null>(null);
+  const [pdfjsLib, setPdfjsLib] = useState<typeof import("pdfjs-dist") | null>(
+    null,
+  );
 
   // Load pdfjs-dist library
   useEffect(() => {
@@ -24,7 +19,7 @@ export default function PdfOcrTool() {
         pdfjs.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/pdf.worker.min.mjs`;
         setPdfjsLib(pdfjs);
       } catch (error) {
-        console.error("Failed to load pdfjs-dist:", error);
+        logger.error("Failed to load pdfjs-dist", error);
       }
     };
     loadPdfJs();
@@ -48,7 +43,9 @@ export default function PdfOcrTool() {
       for (let pageNum = 1; pageNum <= numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
         const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item: { str: string }) => item.str).join(" ");
+        const pageText = textContent.items
+          .map((item) => (item as { str?: string }).str ?? "")
+          .join(" ");
         fullText += `Page ${pageNum}:\n${pageText}\n\n`;
       }
 
@@ -63,7 +60,7 @@ export default function PdfOcrTool() {
       const dataUrl = URL.createObjectURL(blob);
       return dataUrl;
     } catch (error) {
-      console.error("OCR failed:", error);
+      logger.error("OCR failed", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to extract text";
       setExtractedText(prev => ({
         ...prev,
@@ -81,7 +78,7 @@ export default function PdfOcrTool() {
     try {
       await navigator.clipboard.writeText(text);
     } catch (error) {
-      console.error("Failed to copy:", error);
+      logger.error("Failed to copy", error);
     }
   };
 
@@ -103,7 +100,6 @@ export default function PdfOcrTool() {
       description="Extract text from PDF documents. Perfect for copying content from scanned documents."
       icon="🔍"
       onProcess={handleProcess}
-      onFilesChange={setFiles}
       disabled={!pdfjsLib}
     >
       {({ files }) => (

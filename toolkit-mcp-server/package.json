@@ -1,0 +1,61 @@
+{
+  "name": "toolkit-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server exposing Toolkit's image and PDF tools to AI agents (stdio, local)",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "toolkit-mcp-server": "dist/index.js"
+  },
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "inspector": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "eval": "node eval.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "image-processing",
+    "pdf",
+    "ai",
+    "toolkit",
+    "sharp",
+    "background-removal",
+    "image-resize",
+    "image-compress",
+    "ocr"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arindam/tookit.git",
+    "directory": "toolkit-mcp-server"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "canvas": "^3.2.3",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.0.379",
+    "sharp": "^0.33.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

@@ -15,20 +15,16 @@ export default function Footer() {
             <span style={{ color: "var(--color-text-primary)" }}>Kit</span>
           </div>
 
-          {/* Nav links */}
+          {/* Tagline */}
           <div
-            className="flex gap-4 text-xs"
+            className="flex gap-4 text-xs uppercase tracking-widest"
             style={{ color: "var(--color-text-secondary)" }}
           >
-            <a href="#" className="hover:text-[#FF5C35] transition-colors">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-[#FF5C35] transition-colors">
-              Terms
-            </a>
-            <a href="#" className="hover:text-[#FF5C35] transition-colors">
-              Contact
-            </a>
+            <span>Browser-based</span>
+            <span>•</span>
+            <span>Privacy-first</span>
+            <span>•</span>
+            <span>MCP — in development</span>
           </div>
         </div>
 

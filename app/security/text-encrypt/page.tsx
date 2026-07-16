@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import ToolLayout from "@/components/shared/ToolLayout";
-import { MessageSquare, Lock, Unlock, Copy, RefreshCw, KeyRound, ShieldCheck, AlertTriangle, CheckCircle2, ChevronDown } from "lucide-react";
+import { MessageSquare, Lock, Unlock, Copy, RefreshCw, KeyRound, ShieldCheck, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 const ALGORITHM = "AES-GCM";
 const KEY_LENGTH = 256;
@@ -158,7 +159,7 @@ export default function TextEncryptTool() {
       }
       setOutputText(result);
     } catch (err) {
-      console.error("Processing failed:", err);
+      logger.error("Processing failed", err);
       setErrorMsg(
         err instanceof Error
           ? `EXEC_ERROR: ${err.message.toUpperCase().replace(/\s+/g, "_")}`
@@ -176,7 +177,7 @@ export default function TextEncryptTool() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Copy failed:", err);
+      logger.error("Copy failed", err);
     }
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, Suspense } from "react";
+import { useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ChevronRight, Download } from "lucide-react";
 import ToolLayout from "@/components/shared/ToolLayout";
@@ -22,8 +22,6 @@ const OUTPUT_FORMATS = [
   { value: "webp", label: "WEBP", mime: "image/webp", supportsQuality: true },
   { value: "avif", label: "AVIF", mime: "image/avif", supportsQuality: true },
 ];
-
-const INPUT_FORMATS = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return bytes + " B";
@@ -88,6 +86,7 @@ function FileCard({
       </button>
 
       <div className="relative overflow-hidden" style={{ height: "160px" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- preview uses object URLs */}
         <img
           src={file.processedUrl || file.previewUrl}
           alt={file.file.name}
@@ -209,13 +208,6 @@ function ImageConverterContent() {
 
   const currentOutputFormat = OUTPUT_FORMATS.find((f) => f.value === toFormat);
   const needsBackground = fromFormat === "png" && toFormat === "jpg";
-
-  useEffect(() => {
-    const from = searchParams.get("from");
-    const to = searchParams.get("to");
-    if (from) setFromFormat(from);
-    if (to) setToFormat(to);
-  }, [searchParams]);
 
   const handleFormatChange = (newFrom: string, newTo: string) => {
     setFromFormat(newFrom);

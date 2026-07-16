@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import ToolLayout from "@/components/shared/ToolLayout";
 import { Fingerprint, Copy, Download, RefreshCw, Layers, FileText, ShieldAlert, Cpu } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 const HASH_ALGORITHMS = [
   { id: "SHA-256", name: "SHA-256", bits: 256, status: "SECURE" },
@@ -69,7 +70,7 @@ export default function HashGeneratorTool() {
       }
       setHashes(newHashes);
     } catch (error) {
-      console.error("Hash generation failed:", error);
+      logger.error("Hash generation failed", error);
     } finally {
       setIsLoading(false);
     }

@@ -3,7 +3,10 @@
 import BaseFileTool from "../components/BaseFileTool";
 
 export default function DocxToPdf() {
-  const handleConvert = async (file: File): Promise<{ url: string; blob: Blob }> => {
+  const handleConvert = async (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _file: File,
+  ): Promise<{ url: string; blob: Blob }> => {
     return new Promise((resolve, reject) => {
       reject(new Error("DOCX to PDF conversion requires server-side processing. This feature is coming soon!"));
     });

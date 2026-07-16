@@ -92,6 +92,7 @@ function FileCard({
 
 			{/* Preview area */}
 			<div className="relative overflow-hidden" style={{ height: "160px" }}>
+				{/* eslint-disable-next-line @next/next/no-img-element -- preview uses object URLs */}
 				<img
 					src={file.processedUrl || file.previewUrl}
 					alt={file.file.name}

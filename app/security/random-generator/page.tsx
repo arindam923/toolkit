@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import ToolLayout from "@/components/shared/ToolLayout";
 import { Dices, Copy, RefreshCw, Hash, FileJson, Layers, ShieldCheck, ChevronDown, Binary, Braces } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 const CHAR_SETS = {
   lowercase: "abcdefghijklmnopqrstuvwxyz",
@@ -15,67 +16,73 @@ const CHAR_SETS = {
 
 type GeneratorType = "string" | "number" | "hex" | "base64" | "uuid";
 
+function generateRandomValue(charset: string, length: number): string {
+  let result = "";
+  const array = new Uint32Array(length);
+  window.crypto.getRandomValues(array);
+  for (let i = 0; i < length; i++) {
+    result += charset[array[i] % charset.length];
+  }
+  return result;
+}
+
+function generateResults(
+  type: GeneratorType,
+  length: number,
+  count: number,
+): string[] {
+  const newResults: string[] = [];
+
+  for (let i = 0; i < count; i++) {
+    let value: string;
+
+    switch (type) {
+      case "string": {
+        const stringChars =
+          CHAR_SETS.lowercase +
+          CHAR_SETS.uppercase +
+          CHAR_SETS.symbols +
+          CHAR_SETS.numbers;
+        value = generateRandomValue(stringChars, length);
+        break;
+      }
+      case "number": {
+        const numChars = CHAR_SETS.numbers;
+        value = generateRandomValue(numChars, length);
+        break;
+      }
+      case "hex":
+        value = generateRandomValue(CHAR_SETS.hex, length);
+        break;
+      case "base64":
+        value = generateRandomValue(CHAR_SETS.base64, length);
+        break;
+      case "uuid":
+        value = window.crypto.randomUUID();
+        break;
+      default:
+        value = "";
+    }
+
+    newResults.push(value);
+  }
+
+  return newResults;
+}
+
 export default function RandomGeneratorTool() {
   const [type, setType] = useState<GeneratorType>("string");
   const [length, setLength] = useState(32);
   const [count, setCount] = useState(1);
-  const [results, setResults] = useState<string[]>([]);
+  const [results, setResults] = useState<string[]>(() =>
+    typeof window === "undefined" ? [] : generateResults(type, length, count),
+  );
   const [separator, setSeparator] = useState("\n");
   const [copied, setCopied] = useState(false);
 
-  const generateRandom = useCallback(
-    (charset: string, len: number): string => {
-      let result = "";
-      const array = new Uint32Array(len);
-      window.crypto.getRandomValues(array);
-      for (let i = 0; i < len; i++) {
-        result += charset[array[i] % charset.length];
-      }
-      return result;
-    },
-    []
-  );
-
   const handleGenerate = useCallback(() => {
-    const newResults: string[] = [];
-
-    for (let i = 0; i < count; i++) {
-      let value: string;
-
-      switch (type) {
-        case "string": {
-          const stringChars = CHAR_SETS.lowercase + CHAR_SETS.uppercase + CHAR_SETS.symbols + CHAR_SETS.numbers;
-          value = generateRandom(stringChars, length);
-          break;
-        }
-        case "number": {
-          const numChars = CHAR_SETS.numbers;
-          value = generateRandom(numChars, length);
-          break;
-        }
-        case "hex":
-          value = generateRandom(CHAR_SETS.hex, length);
-          break;
-        case "base64":
-          value = generateRandom(CHAR_SETS.base64, length);
-          break;
-        case "uuid":
-          value = window.crypto.randomUUID();
-          break;
-        default:
-          value = "";
-      }
-
-      newResults.push(value);
-    }
-
-    setResults(newResults);
-  }, [type, length, count, generateRandom]);
-
-  // Initial generate
-  useEffect(() => {
-    handleGenerate();
-  }, [handleGenerate]);
+    setResults(generateResults(type, length, count));
+  }, [type, length, count]);
 
   const copyAll = async () => {
     const text = results.join(separator);
@@ -84,7 +91,7 @@ export default function RandomGeneratorTool() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Copy failed:", err);
+      logger.error("Copy failed", err);
     }
   };
 

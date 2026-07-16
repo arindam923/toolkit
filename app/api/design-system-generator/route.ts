@@ -2,6 +2,8 @@ import {
   type NextRequest,
   NextResponse,
 } from "next/server";
+import { logger } from "@/lib/logger";
+import { createErrorResponse } from "@/lib/api-errors";
 
 type PaletteItem = {
   hex: string;
@@ -157,13 +159,18 @@ function parseGeminiTextToDesignSystem(
 }
 
 export async function POST(req: NextRequest) {
+  const path = req.nextUrl.pathname;
+
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json(
-        { error: "Missing GEMINI_API_KEY on server." },
-        { status: 500 },
+      const errorResponse = createErrorResponse(
+        "INTERNAL_ERROR",
+        "GEMINI_API_KEY is not configured on the server.",
+        path,
+        { setup: "Copy .env.example to .env and set GEMINI_API_KEY to enable the design system generator." }
       );
+      return NextResponse.json(errorResponse, { status: 500 });
     }
 
     const body = (await req.json()) as {
@@ -176,10 +183,12 @@ export async function POST(req: NextRequest) {
       body?.mediaType?.trim() || "image/png";
 
     if (!base64Image) {
-      return NextResponse.json(
-        { error: "Request must include base64Image." },
-        { status: 400 },
+      const errorResponse = createErrorResponse(
+        "VALIDATION_ERROR",
+        "Request must include base64Image.",
+        path
       );
+      return NextResponse.json(errorResponse, { status: 400 });
     }
 
     const prompt = `Analyze this UI screenshot and extract its design system. Respond ONLY with a valid JSON object — no markdown, no backticks, no explanation before or after.
@@ -238,14 +247,14 @@ Extract 5–8 colors that truly represent the palette. Extract 2–4 typography 
 
     if (!geminiRes.ok) {
       const details = await geminiRes.text();
-      return NextResponse.json(
-        {
-          error: "Gemini request failed.",
-          status: geminiRes.status,
-          details,
-        },
-        { status: 502 },
+      logger.apiError("design-system-generator", `Gemini request failed with status ${geminiRes.status}`);
+      const errorResponse = createErrorResponse(
+        "SERVICE_UNAVAILABLE",
+        "Gemini request failed.",
+        path,
+        { status: geminiRes.status, details }
       );
+      return NextResponse.json(errorResponse, { status: 502 });
     }
 
     const data = await geminiRes.json();
@@ -257,13 +266,12 @@ Extract 5–8 colors that truly represent the palette. Extract 2–4 typography 
       )?.text || "";
 
     if (!rawText) {
-      return NextResponse.json(
-        {
-          error:
-            "Model response did not include text output.",
-        },
-        { status: 502 },
+      const errorResponse = createErrorResponse(
+        "SERVICE_UNAVAILABLE",
+        "Model response did not include text output.",
+        path
       );
+      return NextResponse.json(errorResponse, { status: 502 });
     }
 
     let result: DesignSystemResult | null = null;
@@ -337,33 +345,32 @@ Extract 5–8 colors that truly represent the palette. Extract 2–4 typography 
 
     if (!result) {
       const truncated = isLikelyTruncatedJson(rawText);
-      return NextResponse.json(
+      const errorResponse = createErrorResponse(
+        "INTERNAL_ERROR",
+        "Failed to parse model output as JSON.",
+        path,
         {
-          error: "Failed to parse model output as JSON.",
           reason: truncated
             ? "Likely truncated response from model."
             : "Malformed JSON response.",
           raw: rawText,
-          details:
-            parseError instanceof Error
-              ? parseError.message
-              : "Unknown parse error",
-        },
-        { status: 502 },
+          details: parseError instanceof Error ? parseError.message : "Unknown parse error",
+        }
       );
+      return NextResponse.json(errorResponse, { status: 502 });
     }
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
+    logger.apiError("design-system-generator", error);
+    const errorResponse = createErrorResponse(
+      "INTERNAL_ERROR",
+      "Unexpected server error.",
+      path,
       {
-        error: "Unexpected server error.",
-        details:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
-      },
-      { status: 500 },
+        details: error instanceof Error ? error.message : "Unknown error",
+      }
     );
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }

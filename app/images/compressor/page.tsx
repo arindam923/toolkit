@@ -31,15 +31,9 @@ export default function ImageCompressor() {
       const compressedFile = await imageCompression(imageFile.file, options);
       const dataURL = await imageCompression.getDataUrlFromFile(compressedFile);
       return dataURL;
-    } catch (error) {
+    } catch {
       throw new Error("Compression failed");
     }
-  };
-
-  // Calculate file size reduction
-  const calculateReduction = (originalSize: number, compressedSize: number) => {
-    const reduction = 100 - (compressedSize / originalSize) * 100;
-    return Math.round(reduction);
   };
 
   return (

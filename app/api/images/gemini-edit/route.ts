@@ -2,6 +2,8 @@ import {
   type NextRequest,
   NextResponse,
 } from "next/server";
+import { logger } from "@/lib/logger";
+import { createErrorResponse, getStatusCodeFromErrorCode } from "@/lib/api-errors";
 
 const MODEL_ID =
   process.env.GEMINI_IMAGE_MODEL_ID ||
@@ -60,13 +62,6 @@ type EditSuccessResponse = {
   latencyMs?: number;
 };
 
-type EditErrorResponse = {
-  error: string;
-  details?: string;
-  status?: number;
-  finishReason?: string;
-};
-
 const DEFAULT_PROMPT =
   "Enhance this image while preserving composition and subject. Improve clarity, sharpness, and color balance naturally.";
 
@@ -109,14 +104,18 @@ function pickFirstInlineImage(
 
 export async function POST(req: NextRequest) {
   const startedAt = Date.now();
+  const path = req.nextUrl.pathname;
 
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json<EditErrorResponse>(
-        { error: "Missing GEMINI_API_KEY on server." },
-        { status: 500 },
+      const errorResponse = createErrorResponse(
+        "INTERNAL_ERROR",
+        "GEMINI_API_KEY is not configured on the server.",
+        path,
+        { setup: "Copy .env.example to .env and set GEMINI_API_KEY to enable AI image editing." }
       );
+      return NextResponse.json(errorResponse, { status: 500 });
     }
 
     const body = (await req.json()) as EditRequestBody;
@@ -128,19 +127,21 @@ export async function POST(req: NextRequest) {
       body.outputMimeType || "image/png";
 
     if (!base64Image) {
-      return NextResponse.json<EditErrorResponse>(
-        { error: "Request must include base64Image." },
-        { status: 400 },
+      const errorResponse = createErrorResponse(
+        "VALIDATION_ERROR",
+        "Request must include base64Image.",
+        path
       );
+      return NextResponse.json(errorResponse, { status: 400 });
     }
 
     if (!prompt) {
-      return NextResponse.json<EditErrorResponse>(
-        {
-          error: "Request must include a non-empty prompt.",
-        },
-        { status: 400 },
+      const errorResponse = createErrorResponse(
+        "VALIDATION_ERROR",
+        "Request must include a non-empty prompt.",
+        path
       );
+      return NextResponse.json(errorResponse, { status: 400 });
     }
 
     const parts: GeminiPart[] = [
@@ -180,30 +181,30 @@ export async function POST(req: NextRequest) {
 
     if (!geminiRes.ok) {
       const details = await geminiRes.text();
-      return NextResponse.json<EditErrorResponse>(
-        {
-          error: "Gemini request failed.",
-          status: geminiRes.status,
-          details,
-        },
-        { status: 502 },
+      logger.apiError("gemini-edit", `Gemini request failed with status ${geminiRes.status}`);
+      const errorResponse = createErrorResponse(
+        "SERVICE_UNAVAILABLE",
+        "Gemini request failed.",
+        path,
+        { status: geminiRes.status, details }
       );
+      return NextResponse.json(errorResponse, { status: 502 });
     }
 
     const data =
       (await geminiRes.json()) as GeminiGenerateResponse;
 
     if (data.promptFeedback?.blockReason) {
-      return NextResponse.json<EditErrorResponse>(
+      const errorResponse = createErrorResponse(
+        "VALIDATION_ERROR",
+        "Request was blocked by Gemini safety filters.",
+        path,
         {
-          error:
-            "Request was blocked by Gemini safety filters.",
-          details:
-            data.promptFeedback.blockReasonMessage ||
-            data.promptFeedback.blockReason,
-        },
-        { status: 422 },
+          blockReason: data.promptFeedback.blockReason,
+          message: data.promptFeedback.blockReasonMessage,
+        }
       );
+      return NextResponse.json(errorResponse, { status: 422 });
     }
 
     const candidate = data.candidates?.[0];
@@ -212,16 +213,16 @@ export async function POST(req: NextRequest) {
     const textOut = pickFirstNonEmptyText(partsOut);
 
     if (!imageOut) {
-      return NextResponse.json<EditErrorResponse>(
+      const errorResponse = createErrorResponse(
+        "SERVICE_UNAVAILABLE",
+        "Gemini did not return an edited image.",
+        path,
         {
-          error: "Gemini did not return an edited image.",
           finishReason: candidate?.finishReason,
-          details:
-            textOut ||
-            "No inline image part found in candidate output.",
-        },
-        { status: 502 },
+          textResponse: textOut || "No inline image part found in candidate output.",
+        }
       );
+      return NextResponse.json(errorResponse, { status: 502 });
     }
 
     const response: EditSuccessResponse = {
@@ -233,20 +234,17 @@ export async function POST(req: NextRequest) {
       latencyMs: Date.now() - startedAt,
     };
 
-    return NextResponse.json<EditSuccessResponse>(
-      response,
-      { status: 200 },
-    );
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    return NextResponse.json<EditErrorResponse>(
+    logger.apiError("gemini-edit", error);
+    const errorResponse = createErrorResponse(
+      "INTERNAL_ERROR",
+      "Unexpected server error.",
+      path,
       {
-        error: "Unexpected server error.",
-        details:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
-      },
-      { status: 500 },
+        details: error instanceof Error ? error.message : "Unknown error",
+      }
     );
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }

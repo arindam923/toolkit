@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import BasePdfTool, { PdfFile } from "../components/BasePdfTool";
-import { PDFDocument, StandardFonts } from "pdf-lib";
+import { PDFDocument, PDFImage } from "pdf-lib";
+import { logger } from "@/lib/logger";
 
 interface ImageFile extends PdfFile {
   imageWidth?: number;
@@ -29,25 +30,21 @@ export default function ImageToPdfTool() {
     margin: 20,
     quality: 90,
   });
-  const [isProcessing, setIsProcessing] = useState(false);
 
   // Convert images to PDF
-  const handleConvert = async (pdfFile: PdfFile): Promise<string> => {
+  const handleConvert = async (): Promise<string> => {
     try {
-      setIsProcessing(true);
-      
       // Create a new PDF document
       const pdfDoc = await PDFDocument.create();
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-        // Process each image
-        for (const file of files) {
-          // Read the image file
-          const arrayBuffer = await file.file.arrayBuffer();
-          
-          // Determine image format and embed accordingly
-          let image: any;
-          const fileType = file.file.type.toLowerCase();
+      // Process each image
+      for (const file of files) {
+        // Read the image file
+        const arrayBuffer = await file.file.arrayBuffer();
+
+        // Determine image format and embed accordingly
+        let image: PDFImage;
+        const fileType = file.file.type.toLowerCase();
         
         if (fileType.includes("png")) {
           image = await pdfDoc.embedPng(arrayBuffer);
@@ -142,12 +139,10 @@ export default function ImageToPdfTool() {
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes as unknown as ArrayBuffer], { type: "application/pdf" });
       const dataUrl = URL.createObjectURL(blob);
-      
-      setIsProcessing(false);
+
       return dataUrl;
     } catch (error) {
-      setIsProcessing(false);
-      console.error("Conversion failed:", error);
+      logger.error("Conversion failed", error);
       throw new Error(error instanceof Error ? error.message : "Failed to convert images to PDF");
     }
   };
@@ -195,7 +190,12 @@ export default function ImageToPdfTool() {
               ].map((option) => (
                 <button
                   key={option.key}
-                  onClick={() => setSettings(prev => ({ ...prev, pageSize: option.key as any }))}
+                  onClick={() =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      pageSize: option.key as ConvertSettings["pageSize"],
+                    }))
+                  }
                   className={`px-3 py-1.5 rounded-[10px] text-xs font-medium border transition-all ${
                     settings.pageSize === option.key
                       ? "bg-[#7C5CFF] text-white border-[#7C5CFF]"
@@ -223,7 +223,12 @@ export default function ImageToPdfTool() {
                 ].map((option) => (
                   <button
                     key={option.key}
-                    onClick={() => setSettings(prev => ({ ...prev, orientation: option.key as any }))}
+                    onClick={() =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      orientation: option.key as ConvertSettings["orientation"],
+                    }))
+                  }
                     className={`px-3 py-1.5 rounded-[10px] text-xs font-medium border transition-all ${
                       settings.orientation === option.key
                         ? "bg-[#7C5CFF] text-white border-[#7C5CFF]"
@@ -285,7 +290,7 @@ export default function ImageToPdfTool() {
 
           <div className="p-3 rounded-[10px]" style={{ background: "var(--color-background-secondary)" }}>
             <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-              <strong>Tip:</strong> Each image will be placed on a separate page. Use "Fit to Image" to automatically adjust page size to match your image dimensions.
+              <strong>Tip:</strong> Each image will be placed on a separate page. Use &quot;Fit to Image&quot; to automatically adjust page size to match your image dimensions.
             </p>
           </div>
         </div>

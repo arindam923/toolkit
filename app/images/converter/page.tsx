@@ -64,7 +64,12 @@ export default function ImageConverter() {
             {["jpeg", "png", "webp", "avif"].map((format) => (
               <button
                 key={format}
-                onClick={() => setSettings((prev) => ({ ...prev, format: format as any }))}
+                onClick={() =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    format: format as ConvertSettings["format"],
+                  }))
+                }
                 className={`px-3 py-1.5 rounded-[10px] text-xs font-medium border transition-all ${
                   settings.format === format
                     ? "bg-[#FF5C35] text-white border-[#FF5C35]"

@@ -59,7 +59,6 @@ export default function WatermarkTool() {
 
         // Calculate position
         const textWidth = ctx.measureText(settings.text).width;
-        const textHeight = settings.fontSize;
         let x = 0, y = 0;
 
         switch (settings.position) {
@@ -121,7 +120,6 @@ export default function WatermarkTool() {
 
       // Calculate position
       const textWidth = ctx.measureText(settings.text).width;
-      const textHeight = settings.fontSize;
       let x = 0, y = 0;
 
       switch (settings.position) {
@@ -284,7 +282,12 @@ export default function WatermarkTool() {
                 {["top-left", "top-right", "bottom-left", "bottom-right", "center"].map((position) => (
                   <button
                     key={position}
-                    onClick={() => setSettings((prev) => ({ ...prev, position: position as any }))}
+                    onClick={() =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    position: position as WatermarkSettings["position"],
+                  }))
+                }
                     className={`px-3 py-1.5 rounded-[10px] text-xs font-medium border transition-all ${
                       settings.position === position
                         ? "bg-[#FF5C35] text-white border-[#FF5C35]"

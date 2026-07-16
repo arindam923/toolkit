@@ -203,73 +203,53 @@ export default function App() {
             </p>
           </div>
           <div className="space-y-4">
-            <div className="mono-label">Navigation</div>
+            <div className="mono-label">Tools</div>
             <ul className="text-xs space-y-2 uppercase tracking-widest">
               <li>
-                <a href="/directory" className="hover:text-brand-accent">
-                  Directory
-                </a>
+                <button
+                  type="button"
+                  onClick={() => router.push("/images")}
+                  className="hover:text-brand-accent text-left"
+                >
+                  Image Tools
+                </button>
               </li>
               <li>
-                <a href="/docs" className="hover:text-brand-accent">
-                  Documentation
-                </a>
+                <button
+                  type="button"
+                  onClick={() => router.push("/pdf")}
+                  className="hover:text-brand-accent text-left"
+                >
+                  PDF Tools
+                </button>
               </li>
               <li>
-                <a href="/api" className="hover:text-brand-accent">
-                  API Access
-                </a>
+                <button
+                  type="button"
+                  onClick={() => router.push("/files")}
+                  className="hover:text-brand-accent text-left"
+                >
+                  File Tools
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => router.push("/security")}
+                  className="hover:text-brand-accent text-left"
+                >
+                  Security Tools
+                </button>
               </li>
             </ul>
           </div>
-          <div className="space-y-4">
-            <div className="mono-label">Legal</div>
-            <ul className="text-xs space-y-2 uppercase tracking-widest">
-              <li>
-                <a href="/privacy" className="hover:text-brand-accent">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="/terms" className="hover:text-brand-accent">
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <a href="/security" className="hover:text-brand-accent">
-                  Security
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div className="space-y-4">
-            <div className="mono-label">Connect</div>
-            <div className="flex gap-4">
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 border border-border flex items-center justify-center hover:border-foreground cursor-pointer transition-colors"
-              >
-                GH
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 border border-border flex items-center justify-center hover:border-foreground cursor-pointer transition-colors"
-              >
-                TW
-              </a>
-              <a
-                href="https://discord.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 border border-border flex items-center justify-center hover:border-foreground cursor-pointer transition-colors"
-              >
-                DC
-              </a>
-            </div>
+          <div className="space-y-4 col-span-1 lg:col-span-2">
+            <div className="mono-label">About</div>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest leading-relaxed max-w-md">
+              All processing happens in your browser. Files never leave your
+              device for most tools. An MCP server for AI agents is in
+              development.
+            </p>
           </div>
         </footer>
       </main>

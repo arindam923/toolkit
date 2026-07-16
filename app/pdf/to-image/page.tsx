@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import BasePdfTool, { PdfFile } from "../components/BasePdfTool";
+import JSZip from "jszip";
 
 interface ConvertSettings {
   format: "png" | "jpeg" | "webp";
@@ -10,6 +11,12 @@ interface ConvertSettings {
   pageStart: number;
   pageEnd: number;
 }
+
+const FORMAT_OPTIONS = [
+  { key: "png", label: "PNG" },
+  { key: "jpeg", label: "JPEG" },
+  { key: "webp", label: "WebP" },
+] as const;
 
 export default function PdfToImageTool() {
   const [files, setFiles] = useState<PdfFile[]>([]);
@@ -21,114 +28,110 @@ export default function PdfToImageTool() {
     pageEnd: 1,
   });
   const [pageCounts, setPageCounts] = useState<Record<string, number>>({});
-  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Convert PDF to images using dynamic import
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPageCounts = async () => {
+      if (files.length === 0) return;
+      const pdfjs = await import("pdfjs-dist");
+      pdfjs.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/pdf.worker.min.mjs`;
+
+      const counts = await Promise.all(
+        files.map(async (file) => {
+          try {
+            const arrayBuffer = await file.file.arrayBuffer();
+            const pdfDoc = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+            return { id: file.id, count: pdfDoc.numPages };
+          } catch {
+            return { id: file.id, count: 0 };
+          }
+        }),
+      );
+
+      if (cancelled) return;
+
+      const newPageCounts: Record<string, number> = {};
+      for (const { id, count } of counts) {
+        newPageCounts[id] = count;
+      }
+      setPageCounts(newPageCounts);
+
+      const maxPages = newPageCounts[files[0].id] || 1;
+      setSettings((prev) => {
+        const currentStart = Math.max(1, Math.min(prev.pageStart || 1, maxPages));
+        const currentEnd = Math.max(currentStart, Math.min(prev.pageEnd || maxPages, maxPages));
+        // Only auto-expand the default 1-1 range to full document; otherwise preserve user input.
+        if (prev.pageStart === 1 && prev.pageEnd === 1 && maxPages > 1) {
+          return { ...prev, pageStart: 1, pageEnd: maxPages };
+        }
+        if (currentStart !== prev.pageStart || currentEnd !== prev.pageEnd) {
+          return { ...prev, pageStart: currentStart, pageEnd: currentEnd };
+        }
+        return prev;
+      });
+    };
+
+    loadPageCounts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [files]);
+
   const handleConvert = async (pdfFile: PdfFile): Promise<string> => {
-    try {
-      setIsProcessing(true);
-      
-      // Dynamic import to avoid SSR issues
-      const pdfjsLib = await import("pdfjs-dist");
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/pdf.worker.min.mjs`;
-      
-      const arrayBuffer = await pdfFile.file.arrayBuffer();
-      const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      
-      // Calculate scale based on DPI
-      const scale = settings.dpi / 72;
-      
-      // Get the page to convert
-      const pageNum = Math.min(Math.max(settings.pageStart, 1), pdfDoc.numPages);
+    const pdfjs = await import("pdfjs-dist");
+    pdfjs.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/pdf.worker.min.mjs`;
+
+    const arrayBuffer = await pdfFile.file.arrayBuffer();
+    const pdfDoc = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+
+    const start = Math.min(Math.max(settings.pageStart, 1), pdfDoc.numPages);
+    const end = Math.min(Math.max(settings.pageEnd, start), pdfDoc.numPages);
+    const scale = settings.dpi / 72;
+
+    const zip = new JSZip();
+    const baseName = pdfFile.file.name.replace(/\.[^.]+$/, "");
+
+    for (let pageNum = start; pageNum <= end; pageNum++) {
       const page = await pdfDoc.getPage(pageNum);
-      
-      // Calculate dimensions
       const viewport = page.getViewport({ scale });
-      
-      // Create canvas
       const canvas = document.createElement("canvas");
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       const ctx = canvas.getContext("2d");
-      
-      if (!ctx) {
-        throw new Error("Canvas context not available");
-      }
-      
-      // Render PDF page to canvas
-      await page.render({
-        canvasContext: ctx,
-        viewport: viewport,
-        canvas: canvas,
-      } as any).promise;
-      
-      // Convert to image based on format
-      let dataUrl: string;
+      if (!ctx) throw new Error("Canvas context not available");
+
+      await page.render({ canvasContext: ctx, viewport } as unknown as Parameters<typeof page.render>[0]).promise;
+
       const mimeType = `image/${settings.format}`;
-      
-      if (settings.format === "jpeg") {
-        dataUrl = canvas.toDataURL(mimeType, settings.quality / 100);
-      } else if (settings.format === "webp") {
-        dataUrl = canvas.toDataURL(mimeType, settings.quality / 100);
-      } else {
-        // PNG doesn't support quality parameter
-        dataUrl = canvas.toDataURL(mimeType);
-      }
-      
-      setIsProcessing(false);
-      return dataUrl;
-    } catch (error) {
-      setIsProcessing(false);
-      console.error("Conversion failed:", error);
-      throw new Error(error instanceof Error ? error.message : "Failed to convert PDF to image");
+      const dataUrl =
+        settings.format === "png"
+          ? canvas.toDataURL(mimeType)
+          : canvas.toDataURL(mimeType, settings.quality / 100);
+
+      const base64 = dataUrl.split(",")[1];
+      if (!base64) throw new Error("Failed to generate image data");
+
+      const ext = settings.format === "jpeg" ? "jpg" : settings.format;
+      zip.file(`${baseName}_page_${pageNum}.${ext}`, base64, { base64: true });
     }
+
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    const dataUrl = URL.createObjectURL(zipBlob);
+    return dataUrl;
   };
 
-  // Load PDF page count using dynamic import
-  useEffect(() => {
-    const loadPageCounts = async () => {
-      if (files.length === 0) return;
-      
-      try {
-        const pdfjsLib = await import("pdfjs-dist");
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/pdf.worker.min.mjs`;
-        const newPageCounts: Record<string, number> = {};
-        
-        for (const file of files) {
-          if (!newPageCounts[file.id]) {
-            const arrayBuffer = await file.file.arrayBuffer();
-            const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            newPageCounts[file.id] = pdfDoc.numPages;
-          }
-        }
-
-        setPageCounts(newPageCounts);
-        
-        // Update page range if needed
-        if (files.length > 0) {
-          const pdfId = files[0].id;
-          const maxPages = newPageCounts[pdfId] || 1;
-          setSettings(prev => ({
-            ...prev,
-            pageEnd: Math.min(prev.pageEnd, maxPages),
-            pageStart: Math.min(prev.pageStart, maxPages),
-          }));
-        }
-      } catch (error) {
-        console.error("Failed to load PDF:", error);
-      }
-    };
-
-    loadPageCounts();
-  }, [files]);
+  const maxPages = pageCounts[files[0]?.id] || 1;
 
   return (
     <BasePdfTool
       title="PDF to Image"
-      description="Convert PDF pages to high-quality images in various formats including JPG, PNG, and WebP."
+      description="Convert PDF pages to high-quality images. Multiple pages are packaged into a ZIP file."
       icon="🖼️"
       onProcess={handleConvert}
       onFilesChange={setFiles}
+      downloadExtension="zip"
     >
       {({ files }) => (
         <div className="space-y-4">
@@ -149,19 +152,17 @@ export default function PdfToImageTool() {
           )}
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
+            <span className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
               Output Format
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: "png", label: "PNG" },
-                { key: "jpeg", label: "JPEG" },
-                { key: "webp", label: "WebP" },
-              ].map((option) => (
+            </span>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Output format">
+              {FORMAT_OPTIONS.map((option) => (
                 <button
                   key={option.key}
                   type="button"
-                  onClick={() => setSettings(prev => ({ ...prev, format: option.key as any }))}
+                  role="radio"
+                  aria-checked={settings.format === option.key}
+                  onClick={() => setSettings((prev) => ({ ...prev, format: option.key as ConvertSettings["format"] }))}
                   className={`px-3 py-1.5 rounded-[10px] text-xs font-medium border transition-all ${
                     settings.format === option.key
                       ? "bg-[#7C5CFF] text-white border-[#7C5CFF]"
@@ -175,20 +176,21 @@ export default function PdfToImageTool() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
-              Page to Convert
-            </label>
+            <span className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
+              Page Range
+            </span>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] mb-1 block" style={{ color: "var(--color-text-secondary)" }}>
+                <label htmlFor="page-start" className="text-[10px] mb-1 block" style={{ color: "var(--color-text-secondary)" }}>
                   From Page
                 </label>
                 <input
+                  id="page-start"
                   type="number"
-                  min="1"
-                  max={pageCounts[files[0]?.id] || 1}
+                  min={1}
+                  max={maxPages}
                   value={settings.pageStart}
-                  onChange={(e) => setSettings(prev => ({ ...prev, pageStart: parseInt(e.target.value) || 1 }))}
+                  onChange={(e) => setSettings((prev) => ({ ...prev, pageStart: parseInt(e.target.value, 10) || 1 }))}
                   className="w-full px-2.5 py-1.5 rounded-[10px] text-xs border"
                   style={{
                     background: "var(--color-background-secondary)",
@@ -198,15 +200,16 @@ export default function PdfToImageTool() {
                 />
               </div>
               <div>
-                <label className="text-[10px] mb-1 block" style={{ color: "var(--color-text-secondary)" }}>
+                <label htmlFor="page-end" className="text-[10px] mb-1 block" style={{ color: "var(--color-text-secondary)" }}>
                   To Page
                 </label>
                 <input
+                  id="page-end"
                   type="number"
-                  min="1"
-                  max={pageCounts[files[0]?.id] || 1}
+                  min={1}
+                  max={maxPages}
                   value={settings.pageEnd}
-                  onChange={(e) => setSettings(prev => ({ ...prev, pageEnd: parseInt(e.target.value) || 1 }))}
+                  onChange={(e) => setSettings((prev) => ({ ...prev, pageEnd: parseInt(e.target.value, 10) || 1 }))}
                   className="w-full px-2.5 py-1.5 rounded-[10px] text-xs border"
                   style={{
                     background: "var(--color-background-secondary)",
@@ -216,51 +219,49 @@ export default function PdfToImageTool() {
                 />
               </div>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
-              Quality: {settings.quality}%
-            </label>
-            <input
-              type="range"
-              min="10"
-              max="100"
-              value={settings.quality}
-              onChange={(e) => setSettings(prev => ({ ...prev, quality: parseInt(e.target.value) }))}
-              className="w-full"
-              style={{ accentColor: "#7C5CFF" }}
-            />
-            <div className="flex justify-between text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
-              <span>Lower quality, smaller file</span>
-              <span>Higher quality, larger file</span>
+            <div className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
+              Range: 1 - {maxPages} pages
             </div>
           </div>
 
+          {settings.format !== "png" && (
+            <div>
+              <label htmlFor="image-quality" className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
+                Quality: {settings.quality}%
+              </label>
+              <input
+                id="image-quality"
+                type="range"
+                min="10"
+                max="100"
+                value={settings.quality}
+                onChange={(e) => setSettings((prev) => ({ ...prev, quality: parseInt(e.target.value, 10) }))}
+                className="w-full"
+                style={{ accentColor: "#7C5CFF" }}
+              />
+            </div>
+          )}
+
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
+            <label htmlFor="image-dpi" className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-primary)" }}>
               Resolution (DPI): {settings.dpi}
             </label>
             <input
+              id="image-dpi"
               type="range"
               min="72"
               max="300"
               step="12"
               value={settings.dpi}
-              onChange={(e) => setSettings(prev => ({ ...prev, dpi: parseInt(e.target.value) }))}
+              onChange={(e) => setSettings((prev) => ({ ...prev, dpi: parseInt(e.target.value, 10) }))}
               className="w-full"
               style={{ accentColor: "#7C5CFF" }}
             />
-            <div className="flex justify-between text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
-              <span>72 (Screen)</span>
-              <span>150 (Print)</span>
-              <span>300 (High Quality)</span>
-            </div>
           </div>
 
           <div className="p-3 rounded-[10px]" style={{ background: "var(--color-background-secondary)" }}>
             <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-              <strong>Tip:</strong> Higher DPI produces better quality images but larger file sizes. For web use, 72-150 DPI is usually sufficient.
+              <strong>Tip:</strong> Multi-page exports are packaged as a ZIP file. For web use, 72-150 DPI is usually sufficient.
             </p>
           </div>
         </div>

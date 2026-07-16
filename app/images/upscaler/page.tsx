@@ -8,8 +8,29 @@ import {
   restoreWithGemini,
   styleEditWithGemini,
 } from "@/app/lib/gemini-image-service";
-import { OLD_PHOTO_PRESET } from "@/app/lib/restoration-service";
-import type { RestorationSettings } from "@/app/lib/restoration-service";
+import { logger } from "@/lib/logger";
+
+interface RestorationSettings {
+  denoise: boolean;
+  denoiseStrength: number;
+  sharpen: boolean;
+  sharpenStrength: number;
+  contrast: boolean;
+  clarity: number;
+  vibrance: boolean;
+  faceEnhance: boolean;
+}
+
+const OLD_PHOTO_PRESET: RestorationSettings = {
+  denoise: true,
+  denoiseStrength: 7,
+  sharpen: true,
+  sharpenStrength: 1.2,
+  contrast: true,
+  clarity: 40,
+  vibrance: true,
+  faceEnhance: false,
+};
 
 export default function ImageUpscaler() {
   const [settings, setSettings] = useState({
@@ -96,7 +117,7 @@ export default function ImageUpscaler() {
 
         return finalUrl;
       } catch (error) {
-        console.error("Gemini image edit error:", error);
+        logger.error("Gemini image edit error", error);
         setStatus("Failed to process image");
         throw error;
       } finally {
@@ -138,12 +159,23 @@ export default function ImageUpscaler() {
   return (
     <BaseTool
       title="Image Upscaler"
-      description="Upscale images using AI with multiple free strategies. Works in any browser!"
+      description="Upscale images using Gemini AI image editing. Requires GEMINI_API_KEY on the server."
       icon="🔍"
       onProcess={upscaleImage}
     >
       {() => (
         <div className="space-y-4">
+          <div
+            className="p-3 rounded-[10px] border border-amber-500/30 bg-amber-500/5"
+          >
+            <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
+              <strong>Setup required:</strong> This tool uses Google Gemini. The server must have{" "}
+              <code className="font-mono text-amber-600">GEMINI_API_KEY</code> set in{" "}
+              <code className="font-mono text-amber-600">.env</code>. See{" "}
+              <code className="font-mono text-amber-600">.env.example</code>.
+            </p>
+          </div>
+
           {isProcessing && (
             <div
               className="p-3 rounded-lg"

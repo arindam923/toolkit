@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Bundled / vendor assets and build outputs
+    "node_modules/**",
+    "public/pdfjs-dist/**",
+    "toolkit-mcp-server/dist/**",
+    "toolkit-mcp-server/node_modules/**",
   ]),
 ]);
 

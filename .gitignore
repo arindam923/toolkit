@@ -40,6 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-
-
-toolkit-mcp-server
+# MCP server (part of this repo; ignore build artifacts only)
+toolkit-mcp-server/dist
+toolkit-mcp-server/node_modules

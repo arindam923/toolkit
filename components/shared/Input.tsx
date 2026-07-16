@@ -1,6 +1,10 @@
 import React from "react";
 
-interface RangeInputProps {
+interface RangeInputProps
+  extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "value" | "onChange" | "min" | "max" | "type"
+  > {
   label?: string;
   min?: number;
   max?: number;
@@ -9,7 +13,6 @@ interface RangeInputProps {
   showValues?: boolean;
   valueFormat?: (value: number) => string;
   className?: string;
-  [key: string]: any;
 }
 
 export function RangeInput({
@@ -57,14 +60,17 @@ export function RangeInput({
   );
 }
 
-interface NumberInputProps {
+interface NumberInputProps
+  extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "value" | "onChange" | "min" | "max" | "type"
+  > {
   label?: string;
   min?: number;
   max?: number;
   value: number;
   onChange: (value: number) => void;
   className?: string;
-  [key: string]: any;
 }
 
 export function NumberInput({
@@ -108,12 +114,15 @@ export function NumberInput({
   );
 }
 
-interface CheckboxInputProps {
+interface CheckboxInputProps
+  extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "checked" | "onChange" | "type"
+  > {
   label?: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
   className?: string;
-  [key: string]: any;
 }
 
 export function CheckboxInput({
@@ -149,12 +158,15 @@ export function CheckboxInput({
   );
 }
 
-interface TextInputProps {
+interface TextInputProps
+  extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "value" | "onChange" | "type"
+  > {
   label?: string;
   value: string;
   onChange: (value: string) => void;
   className?: string;
-  [key: string]: any;
 }
 
 export function TextInput({

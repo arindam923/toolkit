@@ -202,26 +202,21 @@ export default function DesignSystemGeneratorPage() {
   return (
     <BaseTool
       title="Design System Generator"
-      description="Upload UI screenshots to extract palette, typography, and actionable design notes."
+      description="Upload UI screenshots to extract palette, typography, and actionable design notes using Gemini AI."
       icon="🧬"
       onProcess={handleAnalyze}
       onFileRemove={handleFileRemove}
     >
       {() => (
         <div className="space-y-4">
-          {!hasServerRoute && (
-            <div
-              className="p-3 rounded-[10px] text-xs"
-              style={{
-                background: "rgba(255,185,0,0.12)",
-                border: "1px solid rgba(255,185,0,0.3)",
-                color: "var(--color-text-primary)",
-              }}
-            >
-              <strong>Server route unavailable:</strong>{" "}
-              this tool will use local fallback output.
-            </div>
-          )}
+          <div
+            className="p-3 rounded-[10px] text-xs border border-amber-500/30 bg-amber-500/5"
+          >
+            <strong>Setup required:</strong> This tool uses Google Gemini. The server must have{" "}
+            <code className="font-mono text-amber-600">GEMINI_API_KEY</code> set in{" "}
+            <code className="font-mono text-amber-600">.env</code>. See{" "}
+            <code className="font-mono text-amber-600">.env.example</code>.
+          </div>
 
           {error && (
             <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-xs font-medium">

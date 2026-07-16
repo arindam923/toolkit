@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import BaseTool, { ImageFile } from "../components/BaseTool";
+import { logger } from "@/lib/logger";
 
 interface PaletteSettings {
   colorCount: number;
@@ -10,7 +11,6 @@ interface PaletteSettings {
 
 interface ColorInfo {
   rgb: number[];
-  formatted: string;
   hex: string;
   count: number;
 }
@@ -40,7 +40,6 @@ export default function ColorExtractor() {
           const colors = extractColorsFromImage(img, settings.colorCount);
           const colorInfos: ColorInfo[] = colors.map((color) => ({
             rgb: color.rgb,
-            formatted: formatColor(color.rgb),
             hex: rgbToHex(color.rgb[0], color.rgb[1], color.rgb[2]),
             count: color.count,
           }));
@@ -55,7 +54,7 @@ export default function ColorExtractor() {
           ]);
 
           resolve(imageFile.previewUrl);
-        } catch (error) {
+        } catch {
           reject(new Error("Failed to extract colors"));
         }
       };
@@ -142,8 +141,8 @@ export default function ColorExtractor() {
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     let h = 0,
-      s = 0,
-      l = (max + min) / 2;
+      s = 0;
+    const l = (max + min) / 2;
 
     if (max !== min) {
       const d = max - min;
@@ -172,22 +171,9 @@ export default function ColorExtractor() {
       setCopySuccess(color);
       setTimeout(() => setCopySuccess(null), 2000);
     } catch (error) {
-      console.error("Failed to copy color:", error);
+      logger.error("Failed to copy color", error);
     }
   };
-
-  // Update formatted colors when format changes
-  useEffect(() => {
-    setImagePalettes((prev) =>
-      prev.map((palette) => ({
-        ...palette,
-        colors: palette.colors.map((color) => ({
-          ...color,
-          formatted: formatColor(color.rgb),
-        })),
-      })),
-    );
-  }, [settings.format]);
 
   // Handle file removal
   const handleFileRemove = (id: string) => {
@@ -202,11 +188,6 @@ export default function ColorExtractor() {
     if (imagePalettes.length > 0) {
       setImagePalettes([]);
     }
-  };
-
-  // Determine text color for hex labels
-  const getTextColor = (r: number, g: number, b: number): string => {
-    return "var(--color-text-primary)";
   };
 
   return (
@@ -255,7 +236,12 @@ export default function ColorExtractor() {
             {["hex", "rgb", "hsl"].map((format) => (
               <button
                 key={format}
-                onClick={() => setSettings((prev) => ({ ...prev, format: format as any }))}
+                onClick={() =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    format: format as PaletteSettings["format"],
+                  }))
+                }
                 className={`px-3 py-1.5 rounded-[10px] text-xs font-medium border transition-all ${
                   settings.format === format
                     ? "bg-[#FF5C35] text-white border-[#FF5C35]"
@@ -324,12 +310,12 @@ export default function ColorExtractor() {
                 <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2">
                   {palette.colors.map((color, index) => {
                     const [r, g, b] = color.rgb;
-                    const isDark = (r * 0.299 + g * 0.587 + b * 0.114) < 128;
+                    const formatted = formatColor(color.rgb);
 
                     return (
                       <div key={index} className="flex flex-col gap-1">
                         <button
-                          onClick={() => copyToClipboard(color.formatted)}
+                          onClick={() => copyToClipboard(formatted)}
                           className="group relative overflow-hidden rounded-lg transition-all hover:-translate-y-1 hover:shadow-md"
                           style={{
                             backgroundColor: `rgb(${r}, ${g}, ${b})`,
@@ -339,7 +325,7 @@ export default function ColorExtractor() {
                         >
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <span className="text-white text-xs font-medium bg-black bg-opacity-50 px-2 py-1 rounded">
-                              {copySuccess === color.formatted ? "Copied!" : "Copy"}
+                              {copySuccess === formatted ? "Copied!" : "Copy"}
                             </span>
                           </div>
                         </button>
@@ -347,7 +333,7 @@ export default function ColorExtractor() {
                           <div
                             className="text-xs font-medium"
                             style={{
-                              color: getTextColor(r, g, b),
+                              color: "var(--color-text-primary)",
                               backgroundColor: `rgba(${r}, ${g}, ${b}, 0.1)`,
                               padding: "2px 4px",
                               borderRadius: "4px",
@@ -355,7 +341,7 @@ export default function ColorExtractor() {
                               border: `1px solid rgba(${r}, ${g}, ${b}, 0.3)`,
                             }}
                           >
-                            {color.formatted}
+                            {formatted}
                           </div>
                           <div className="text-[10px] text-center" style={{ color: "var(--color-text-secondary)" }}>
                             {Math.round((color.count / (palette.colors.reduce((sum, c) => sum + c.count, 0))) * 100)}%

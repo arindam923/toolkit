@@ -3,10 +3,16 @@
 import { useState, useEffect } from "react";
 import BasePdfTool, { PdfFile } from "../components/BasePdfTool";
 import JSZip from "jszip";
+import { logger } from "@/lib/logger";
+interface PdfTextItem {
+  str: string;
+  transform: number[];
+}
 
 export default function PdfConvertTool() {
-  const [files, setFiles] = useState<PdfFile[]>([]);
-  const [pdfjsLib, setPdfjsLib] = useState<any | null>(null);
+  const [pdfjsLib, setPdfjsLib] = useState<typeof import("pdfjs-dist") | null>(
+    null,
+  );
 
   // Load pdfjs-dist library
   useEffect(() => {
@@ -17,7 +23,7 @@ export default function PdfConvertTool() {
         pdfjs.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/pdf.worker.min.mjs`;
         setPdfjsLib(pdfjs);
       } catch (error) {
-        console.error("Failed to load pdfjs-dist:", error);
+        logger.error("Failed to load pdfjs-dist", error);
       }
     };
     loadPdfJs();
@@ -46,10 +52,9 @@ export default function PdfConvertTool() {
         paragraphs.push(`<w:p><w:r><w:t>Page ${pageNum}</w:t></w:r></w:p>`);
 
         // Group text items by lines (based on y position)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const lines = new Map<number, any[]>();
+        const lines = new Map<number, PdfTextItem[]>();
 
-        for (const item of textContent.items) {
+        for (const item of textContent.items as PdfTextItem[]) {
           const y = Math.round(item.transform[5]);
           if (!lines.has(y)) {
             lines.set(y, []);
@@ -65,8 +70,7 @@ export default function PdfConvertTool() {
           const lineItems = lines.get(y)!;
 
           // Sort items by x position (left to right)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          lineItems.sort((a: any, b: any) => a.transform[4] - b.transform[4]);
+          lineItems.sort((a, b) => a.transform[4] - b.transform[4]);
 
           let lineText = "";
           for (const item of lineItems) {
@@ -138,7 +142,7 @@ export default function PdfConvertTool() {
 
       return dataUrl;
     } catch (error) {
-      console.error("Conversion failed:", error);
+      logger.error("Conversion failed", error);
       throw new Error(error instanceof Error ? error.message : "Failed to convert PDF to Word");
     }
   };
@@ -161,7 +165,6 @@ export default function PdfConvertTool() {
       description="Convert PDF documents to editable Word (.docx) files with preserved formatting."
       icon="📄"
       onProcess={handleConvert}
-      onFilesChange={setFiles}
       disabled={!pdfjsLib}
       downloadExtension="docx"
     >

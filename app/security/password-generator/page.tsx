@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import ToolLayout from "@/components/shared/ToolLayout";
 import { Key, Copy, RefreshCw, Shield, AlertTriangle, CheckCircle } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 const CHARS = {
   lowercase: "abcdefghijklmnopqrstuvwxyz",
@@ -11,42 +12,52 @@ const CHARS = {
   symbols: "!@#$%^&*()_+-=[]{}|;:,.<>?",
 };
 
+function createPassword(
+  length: number,
+  includeLower: boolean,
+  includeUpper: boolean,
+  includeNumbers: boolean,
+  includeSymbols: boolean,
+): string {
+  let chars = "";
+  if (includeLower) chars += CHARS.lowercase;
+  if (includeUpper) chars += CHARS.uppercase;
+  if (includeNumbers) chars += CHARS.numbers;
+  if (includeSymbols) chars += CHARS.symbols;
+
+  if (chars === "") {
+    return "";
+  }
+
+  let result = "";
+  const array = new Uint32Array(length);
+  window.crypto.getRandomValues(array);
+
+  for (let i = 0; i < length; i++) {
+    result += chars[array[i] % chars.length];
+  }
+
+  return result;
+}
+
 export default function PasswordGeneratorTool() {
   const [length, setLength] = useState(24);
-  const [password, setPassword] = useState("");
   const [includeLower, setIncludeLower] = useState(true);
   const [includeUpper, setIncludeUpper] = useState(true);
   const [includeNumbers, setIncludeNumbers] = useState(true);
   const [includeSymbols, setIncludeSymbols] = useState(true);
+  const [password, setPassword] = useState(() =>
+    typeof window === "undefined"
+      ? ""
+      : createPassword(length, includeLower, includeUpper, includeNumbers, includeSymbols),
+  );
   const [copied, setCopied] = useState(false);
 
   const generatePassword = useCallback(() => {
-    let chars = "";
-    if (includeLower) chars += CHARS.lowercase;
-    if (includeUpper) chars += CHARS.uppercase;
-    if (includeNumbers) chars += CHARS.numbers;
-    if (includeSymbols) chars += CHARS.symbols;
-
-    if (chars === "") {
-      setPassword("");
-      return;
-    }
-
-    let result = "";
-    const array = new Uint32Array(length);
-    window.crypto.getRandomValues(array);
-    
-    for (let i = 0; i < length; i++) {
-      result += chars[array[i] % chars.length];
-    }
-
-    setPassword(result);
+    setPassword(
+      createPassword(length, includeLower, includeUpper, includeNumbers, includeSymbols),
+    );
   }, [length, includeLower, includeUpper, includeNumbers, includeSymbols]);
-
-  // Generate on initial load
-  useEffect(() => {
-    generatePassword();
-  }, [generatePassword]);
 
   const handleCopy = async () => {
     if (!password) return;
@@ -55,7 +66,7 @@ export default function PasswordGeneratorTool() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy:", err);
+      logger.error("Failed to copy", err);
     }
   };
 

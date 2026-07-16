@@ -141,6 +141,7 @@ function FileCard({
 				}}
 			>
 				{/* Main image (original or processed) */}
+				{/* eslint-disable-next-line @next/next/no-img-element -- preview uses object URLs */}
 				<img
 					src={file.processedUrl || file.previewUrl}
 					alt={file.file.name}
@@ -156,6 +157,7 @@ function FileCard({
 							className="absolute inset-0 overflow-hidden"
 							style={{ width: `${sliderPos}%` }}
 						>
+							{/* eslint-disable-next-line @next/next/no-img-element -- preview uses object URLs */}
 							<img
 								src={file.previewUrl}
 								alt="Original"

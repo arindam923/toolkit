@@ -1,0 +1,20 @@
+{
+  "name": "toolkit-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for image processing, PDF manipulation, and file conversion tools",
+  "author": {
+    "name": "Toolkit"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arindam/tookit"
+  },
+  "category": "utilities",
+  "tags": ["image-processing", "pdf", "file-conversion", "sharp", "ocr", "background-removal"],
+  "runtime": "node",
+  "runtimeVersion": ">=18.0.0",
+  "transport": "stdio",
+  "command": "node",
+  "args": ["dist/index.js"]
+}

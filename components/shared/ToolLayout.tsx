@@ -54,14 +54,8 @@ export default function ToolLayout({
 				</div>
 				<div className="flex items-center gap-4">
 					<div className="mono-label hidden md:block">
-						Session ID: <span className="text-brand-accent">0x7F2A...</span>
+						{id}
 					</div>
-					<button
-						type="button"
-						className="mono-label px-4 py-1.5 bg-foreground text-background text-xs font-bold"
-					>
-						Deploy Tool
-					</button>
 				</div>
 			</div>
 
@@ -93,22 +87,6 @@ export default function ToolLayout({
 							Parameters
 						</div>
 						{parameters}
-					</div>
-
-					<div className="space-y-4">
-						<div className="mono-label border-b border-border pb-2">
-							MCP Configuration
-						</div>
-						<div className="bg-background border border-border p-4 font-mono text-[10px] leading-tight text-muted-foreground">
-							{"// Agent Access Key"}
-							<br />
-							<span className="text-brand-accent">TK_AUTH_0x992...</span>
-							<br />
-							<br />
-							{"// Endpoint"}
-							<br />
-							https://api.toolkit.io/v1/{id}
-						</div>
 					</div>
 
 					<div className="pt-8 flex flex-col gap-3">{actions}</div>

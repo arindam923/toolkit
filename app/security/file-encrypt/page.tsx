@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import ToolLayout from "@/components/shared/ToolLayout";
 import { Lock, Unlock, Download, ShieldCheck, KeyRound, RefreshCw, AlertTriangle, FileCheck, CheckCircle2 } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 const ALGORITHM = "AES-GCM";
 const KEY_LENGTH = 256;
@@ -154,7 +155,7 @@ export default function FileEncryptTool() {
       setDownloadUrl(url);
       setStatus("success");
     } catch (err) {
-      console.error("Processing failed:", err);
+      logger.error("Processing failed", err);
       setErrorMsg(
         err instanceof Error
           ? `EXEC_ERROR: ${err.message.toUpperCase().replace(/\s+/g, '_')}`
